@@ -257,7 +257,7 @@ footer{text-align:center; color:var(--ink-soft); font-size:12px; margin-top:30px
   <footer>All processing happens locally in this file — nothing is uploaded anywhere.</footer>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js" charset="UTF-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 let templates = [];
@@ -587,6 +587,7 @@ function generateLabelCanvas(row, dims){
       height: 200
     });
   } catch(e){
+    console.error("JsBarcode error:", e);
     // fallback if code has invalid characters for CODE128 - still render label without crashing batch
     ctx.fillStyle = '#c00';
     ctx.font = '20px monospace';
