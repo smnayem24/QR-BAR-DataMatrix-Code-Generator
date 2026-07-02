@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rack Label Code Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg:#F6F4EE;
+  --panel:#FFFFFF;
+  --ink:#1B1F27;
+  --ink-soft:#5B6270;
+  --border:#DEDACB;
+  --safety:#FFC72C;
+  --rack-orange:#D9560C;
+  --ok:#1F8A5F;
+  --danger:#C4432B;
+  --mono: 'IBM Plex Mono', monospace;
+  --cond: 'Barlow Condensed', sans-serif;
+  --sans: 'Inter', sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:var(--sans); background:var(--bg); color:var(--ink);
+  padding:28px 20px 80px;
+}
+.wrap{max-width:1080px; margin:0 auto;}
+
+.hero{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
+  border-bottom:4px solid var(--ink); padding-bottom:16px; margin-bottom:24px;
+  flex-wrap:wrap;
+}
+.hero h1{
+  font-family:var(--cond); font-weight:800; font-size:38px; letter-spacing:0.3px;
+  margin:0; text-transform:uppercase; line-height:1;
+}
+.hero .sub{color:var(--ink-soft); font-size:14px; margin-top:6px; max-width:520px;}
+.stats{display:flex; gap:18px; flex-wrap:wrap;}
+.stat{
+  background:var(--ink); color:#fff; padding:10px 16px; min-width:110px;
+  border-top:4px solid var(--safety);
+}
+.stat .n{font-family:var(--mono); font-weight:600; font-size:22px; display:block;}
+.stat .l{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#C9CCD3;}
+
+.panel{
+  background:var(--panel); border:1px solid var(--border); padding:20px 22px; margin-bottom:20px;
+}
+.panel h2{
+  font-family:var(--cond); font-weight:700; font-size:20px; text-transform:uppercase;
+  letter-spacing:0.5px; margin:0 0 4px; display:flex; align-items:center; gap:10px;
+}
+.panel h2 .tag{
+  font-family:var(--mono); font-size:11px; background:var(--safety); color:var(--ink);
+  padding:2px 8px; font-weight:600;
+}
+.panel .desc{color:var(--ink-soft); font-size:13px; margin-bottom:16px;}
+
+.row{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px;}
+label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:var(--ink-soft); margin-bottom:5px; font-weight:600;}
+input[type=text], input[type=number]{
+  border:1px solid var(--border); background:#FCFBF7; padding:9px 10px; font-family:var(--mono);
+  font-size:14px; color:var(--ink); width:100%;
+}
+input[type=text]:focus, input[type=number]:focus{outline:2px solid var(--safety); outline-offset:1px;}
+.field{flex:1; min-width:130px;}
+.field.small{max-width:100px;}
+.field.wide{min-width:220px; flex:2;}
+
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{
+  text-align:left; font-family:var(--cond); text-transform:uppercase; font-size:12px;
+  letter-spacing:0.5px; color:var(--ink-soft); border-bottom:2px solid var(--ink); padding:8px 6px;
+}
+td{padding:7px 6px; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:13px;}
+tr:hover td{background:#FBF8F0;}
+
+.level-list{margin-top:10px;}
+.level-row{
+  display:grid; grid-template-columns:70px 90px 40px 1fr 34px; gap:10px; align-items:center;
+  padding:6px 0; border-bottom:1px dashed var(--border);
+}
+.level-row input[type=color]{width:36px; height:30px; border:1px solid var(--border); padding:0; cursor:pointer; background:none;}
+.level-row .swatch-label{font-family:var(--mono); font-size:12px; color:var(--ink-soft);}
+.split-toggle{display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;}
+.split-toggle input{width:16px; height:16px;}
+
+button{
+  font-family:var(--cond); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+  border:none; cursor:pointer; padding:10px 18px; font-size:14px;
+}
+.btn-primary{background:var(--ink); color:#fff;}
+.btn-primary:hover{background:#000;}
+.btn-accent{background:var(--safety); color:var(--ink);}
+.btn-accent:hover{background:#F0B400;}
+.btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--ink); padding:8px 14px;}
+.btn-ghost:hover{background:var(--ink); color:#fff;}
+.btn-danger{background:transparent; color:var(--danger); border:1px solid var(--danger); padding:6px 10px; font-size:12px;}
+.btn-danger:hover{background:var(--danger); color:#fff;}
+.btn-small{padding:6px 10px; font-size:12px;}
+
+.actions{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;}
+
+.template-card{
+  border:1px solid var(--border); border-left:6px solid var(--rack-orange); padding:14px 16px; margin-bottom:12px;
+  background:#FCFBF7; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;
+}
+.template-card .meta{font-family:var(--cond); font-size:18px; font-weight:700; text-transform:uppercase;}
+.template-card .detail{font-family:var(--mono); font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.6;}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.chip{
+  font-family:var(--mono); font-size:11px; padding:2px 8px; border-radius:2px; color:#fff;
+  display:inline-flex; align-items:center; gap:4px;
+}
+
+.empty{
+  text-align:center; padding:30px; color:var(--ink-soft); font-size:13px; border:1px dashed var(--border);
+}
+.preview-note{font-size:12px; color:var(--ink-soft); margin-top:10px;}
+footer{text-align:center; color:var(--ink-soft); font-size:12px; margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div>
+      <h1>Rack Label Code Generator</h1>
+      <div class="sub">Define rack profiles once, expand to every aisle/bay/level/bin combination, export a print-ready CSV for barcode generation.</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n" id="statTemplates">0</span><span class="l">Profiles</span></div>
+      <div class="stat"><span class="n" id="statBays">0</span><span class="l">Bays</span></div>
+      <div class="stat"><span class="n" id="statLabels">0</span><span class="l">Labels</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1 &middot; Build a Rack Profile <span class="tag">DEFINE STRUCTURE</span></h2>
+    <div class="desc">A profile = one rack layout pattern (level count, which levels split into A/B bins, per-level color) applied to a range of aisles and bays. Add one profile per rack type you have.</div>
+
+    <div class="row">
+      <div class="field wide">
+        <label>Profile name</label>
+        <input type="text" id="tplName" placeholder="e.g. Standard Aisle Rack">
+      </div>
+      <div class="field">
+        <label>Aisles (e.g. A-F or A,C,E)</label>
+        <input type="text" id="tplAisles" placeholder="A-D">
+      </div>
+      <div class="field small">
+        <label>Bay from</label>
+        <input type="number" id="tplBayStart" value="1" min="1">
+      </div>
+      <div class="field small">
+        <label>Bay to</label>
+        <input type="number" id="tplBayEnd" value="10" min="1">
+      </div>
+    </div>
+
+    <div class="level-list" id="levelList"></div>
+
+    <div class="actions">
+      <button class="btn-ghost btn-small" onclick="addLevelRow()">+ Add Level</button>
+      <button class="btn-ghost btn-small" onclick="quickAdd7()">Quick-fill 7 Levels (like reference)</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" onclick="saveTemplate()">Save Profile</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2 &middot; Saved Profiles <span class="tag" id="profileCountTag">0</span></h2>
+    <div id="templateContainer"><div class="empty">No profiles yet — build one above.</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>3 &middot; Generate &amp; Export</h2>
+    <div class="desc">Generates every code, ordered bottom-to-top per bay to match physical mounting order (lowest level = bottom of strip).</div>
+    <div class="actions">
+      <button class="btn-accent" onclick="generateAndPreview()">Generate Preview</button>
+      <button class="btn-primary" onclick="downloadCSV()">Download Full CSV</button>
+    </div>
+    <div class="preview-note" id="previewNote"></div>
+    <div style="overflow-x:auto; margin-top:12px;">
+      <table id="previewTable" style="display:none;">
+        <thead>
+          <tr><th>Profile</th><th>Aisle</th><th>Bay</th><th>Level</th><th>Bin</th><th>Full Code</th><th>Color</th><th>Stack Pos (bottom-up)</th></tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>All processing happens locally in this file — nothing is uploaded anywhere.</footer>
+</div>
+
+<script>
+let templates = [];
+let levelDraft = [];
+let generatedRows = [];
+
+const DEFAULT_COLORS = ["#E8493C","#2BB673","#E8830C","#F0C419","#1B9E8C","#3B93D9","#8B4FC9"];
+
+function addLevelRow(num, split, color){
+  const idx = levelDraft.length;
+  levelDraft.push({
+    num: num ?? (idx+1),
+    split: split ?? false,
+    color: color ?? DEFAULT_COLORS[idx % DEFAULT_COLORS.length]
+  });
+  renderLevelList();
+}
+
+function removeLevelRow(i){
+  levelDraft.splice(i,1);
+  renderLevelList();
+}
+
+function quickAdd7(){
+  levelDraft = [];
+  for(let i=1;i<=7;i++){
+    addLevelRowSilent(i, i<=4, DEFAULT_COLORS[i-1]);
+  }
+  renderLevelList();
+}
+function addLevelRowSilent(num, split, color){
+  levelDraft.push({num, split, color});
+}
+
+function renderLevelList(){
+  const el = document.getElementById('levelList');
+  if(levelDraft.length === 0){
+    el.innerHTML = '<div class="preview-note">No levels added yet.</div>';
+    return;
+  }
+  el.innerHTML = levelDraft.map((lv,i) => `
+    <div class="level-row">
+      <input type="number" value="${lv.num}" min="1" onchange="levelDraft[${i}].num=parseInt(this.value)||1">
+      <label class="split-toggle"><input type="checkbox" ${lv.split?'checked':''} onchange="levelDraft[${i}].split=this.checked"> Split A/B</label>
+      <input type="color" value="${lv.color}" onchange="levelDraft[${i}].color=this.value">
+      <span class="swatch-label">Level ${String(lv.num).padStart(2,'0')} ${lv.split?'&rarr; 2 bins (A/B)':'&rarr; 1 bin'}</span>
+      <button class="btn-danger" onclick="removeLevelRow(${i})">&times;</button>
+    </div>
+  `).join('');
+}
+
+function expandAisles(str){
+  const parts = str.split(',').map(s=>s.trim()).filter(Boolean);
+  let aisles = [];
+  parts.forEach(p=>{
+    if(p.includes('-')){
+      const [a,b] = p.split('-').map(s=>s.trim().toUpperCase());
+      const start = a.charCodeAt(0), end = b.charCodeAt(0);
+      for(let c=start;c<=end;c++) aisles.push(String.fromCharCode(c));
+    } else {
+      aisles.push(p.toUpperCase());
+    }
+  });
+  return aisles;
+}
+
+function saveTemplate(){
+  const name = document.getElementById('tplName').value.trim();
+  const aislesStr = document.getElementById('tplAisles').value.trim();
+  const bayStart = parseInt(document.getElementById('tplBayStart').value);
+  const bayEnd = parseInt(document.getElementById('tplBayEnd').value);
+
+  if(!name || !aislesStr || !bayStart || !bayEnd || levelDraft.length === 0){
+    alert('Please fill in profile name, aisles, bay range, and at least one level.');
+    return;
+  }
+  if(bayEnd < bayStart){
+    alert('Bay "to" must be greater than or equal to bay "from".');
+    return;
+  }
+
+  templates.push({
+    id: Date.now(),
+    name, aislesStr, bayStart, bayEnd,
+    levels: JSON.parse(JSON.stringify(levelDraft)).sort((a,b)=>a.num-b.num)
+  });
+
+  document.getElementById('tplName').value = '';
+  document.getElementById('tplAisles').value = '';
+  levelDraft = [];
+  renderLevelList();
+  renderTemplates();
+}
+
+function removeTemplate(id){
+  templates = templates.filter(t => t.id !== id);
+  renderTemplates();
+}
+
+function bayPad(bayEnd){ return String(bayEnd).length >= 3 ? String(bayEnd).length : 2; }
+
+function renderTemplates(){
+  const container = document.getElementById('templateContainer');
+  document.getElementById('profileCountTag').textContent = templates.length;
+  if(templates.length === 0){
+    container.innerHTML = '<div class="empty">No profiles yet — build one above.</div>';
+    updateStats();
+    return;
+  }
+  container.innerHTML = templates.map(t => {
+    const aisles = expandAisles(t.aislesStr);
+    const bayCount = t.bayEnd - t.bayStart + 1;
+    const labelsPerBay = t.levels.reduce((s,l)=> s + (l.split?2:1), 0);
+    const total = aisles.length * bayCount * labelsPerBay;
+    const chips = t.levels.map(l => `<span class="chip" style="background:${l.color}">${String(l.num).padStart(2,'0')}${l.split?' A/B':''}</span>`).join('');
+    return `
+      <div class="template-card">
+        <div>
+          <div class="meta">${t.name}</div>
+          <div class="detail">
+            Aisles: ${aisles.join(', ')} &nbsp;|&nbsp; Bays: ${String(t.bayStart).padStart(2,'0')}&ndash;${String(t.bayEnd).padStart(2,'0')} (${bayCount})<br>
+            ${labelsPerBay} labels/bay &times; ${aisles.length} aisles &times; ${bayCount} bays = <strong>${total} labels</strong>
+          </div>
+          <div class="chips">${chips}</div>
+        </div>
+        <button class="btn-danger" onclick="removeTemplate(${t.id})">Remove</button>
+      </div>
+    `;
+  }).join('');
+  updateStats();
+}
+
+function updateStats(){
+  let totalBays = 0, totalLabels = 0;
+  templates.forEach(t => {
+    const aisles = expandAisles(t.aislesStr);
+    const bayCount = t.bayEnd - t.bayStart + 1;
+    const labelsPerBay = t.levels.reduce((s,l)=> s + (l.split?2:1), 0);
+    totalBays += aisles.length * bayCount;
+    totalLabels += aisles.length * bayCount * labelsPerBay;
+  });
+  document.getElementById('statTemplates').textContent = templates.length;
+  document.getElementById('statBays').textContent = totalBays;
+  document.getElementById('statLabels').textContent = totalLabels;
+}
+
+function buildRows(){
+  let rows = [];
+  templates.forEach(t => {
+    const aisles = expandAisles(t.aislesStr);
+    const pad = bayPad(t.bayEnd);
+    aisles.forEach(aisle => {
+      for(let bay = t.bayStart; bay <= t.bayEnd; bay++){
+        const bayStr = String(bay).padStart(pad,'0');
+        let stackPos = 0;
+        t.levels.forEach(lv => {
+          const levelStr = String(lv.num).padStart(2,'0');
+          if(lv.split){
+            ['A','B'].forEach(bin => {
+              stackPos++;
+              rows.push({
+                profile: t.name, aisle, bay: bayStr, level: levelStr, bin,
+                fullCode: `${aisle}-${bayStr}-${levelStr}${bin}`,
+                color: lv.color, stackPos
+              });
+            });
+          } else {
+            stackPos++;
+            rows.push({
+              profile: t.name, aisle, bay: bayStr, level: levelStr, bin: '',
+              fullCode: `${aisle}-${bayStr}-${levelStr}`,
+              color: lv.color, stackPos
+            });
+          }
+        });
+      }
+    });
+  });
+  return rows;
+}
+
+function generateAndPreview(){
+  if(templates.length === 0){
+    alert('Add at least one profile first.');
+    return;
+  }
+  generatedRows = buildRows();
+  const table = document.getElementById('previewTable');
+  const body = document.getElementById('previewBody');
+  const previewRows = generatedRows.slice(0, 60);
+  body.innerHTML = previewRows.map(r => `
+    <tr>
+      <td>${r.profile}</td><td>${r.aisle}</td><td>${r.bay}</td><td>${r.level}</td><td>${r.bin||'&mdash;'}</td>
+      <td><strong>${r.fullCode}</strong></td>
+      <td><span style="display:inline-block;width:12px;height:12px;background:${r.color};vertical-align:middle;margin-right:6px;border:1px solid #0002;"></span>${r.color}</td>
+      <td>${r.stackPos}</td>
+    </tr>
+  `).join('');
+  table.style.display = 'table';
+  document.getElementById('previewNote').textContent =
+    `Showing ${previewRows.length} of ${generatedRows.length} total generated codes. Download CSV for the full set.`;
+}
+
+function downloadCSV(){
+  if(templates.length === 0){
+    alert('Add at least one profile first.');
+    return;
+  }
+  const rows = buildRows();
+  const header = ['Profile','Aisle','Bay','Level','Bin','FullCode','Color','StackPositionBottomUp'];
+  const csvLines = [header.join(',')];
+  rows.forEach(r => {
+    csvLines.push([r.profile, r.aisle, r.bay, r.level, r.bin, r.fullCode, r.color, r.stackPos].join(','));
+  });
+  const blob = new Blob([csvLines.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rack_label_codes.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// init
+quickAdd7();
+renderTemplates();
+</script>
+</body>
+</html>
