@@ -1,0 +1,57 @@
+/* ==========================================================================
+   INDUSTRIAL CODE & LABEL GENERATOR - PRINT SPECIFIC STYLESHEET
+   ========================================================================== */
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  
+  body {
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .wrap > *:not(#printArea),
+  .inspector-card-wrapper,
+  .preview-toolbar,
+  .hero,
+  .layout-grid > *:first-child,
+  footer,
+  .item-actions {
+    display: none !important;
+  }
+  
+  .layout-grid {
+    display: block !important;
+  }
+  
+  .panel {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  
+  .preview-container {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  
+  .barcode-sheet-grid {
+    box-shadow: none !important;
+    page-break-after: auto;
+  }
+  
+  .barcode-item {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

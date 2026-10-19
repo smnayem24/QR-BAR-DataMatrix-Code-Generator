@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Industrial Code &amp; Label Generator PRO</title>
+
+  <!-- Google Web Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&family=Montserrat:wght@600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=Poppins:wght@600;700;800&family=Roboto+Mono:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO HEADER -->
+  <header class="hero">
+    <div>
+      <h1>Industrial Code &amp; Label Generator <span class="badge">PRO 4.0</span></h1>
+      <div class="sub">High-precision labeling system &bull; <strong>1D Barcode &bull; 2D Data Matrix &bull; QR Code</strong> &bull; Landscape 6&times;3&Prime; Default &bull; 1:1 Live Inspector &bull; Master Press Roll PDF.</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n" id="statCount">0</span><span class="l">Labels</span></div>
+      <div class="stat"><span class="n" id="statSize">6 &times; 3 in</span><span class="l">Label Size</span></div>
+      <div class="stat"><span class="n" id="statPages">1</span><span class="l">Est. Pages</span></div>
+    </div>
+  </header>
+
+  <div class="layout-grid">
+
+    <!-- LEFT COLUMN: CONTROLS & SETTINGS -->
+    <div class="controls-col">
+
+      <!-- PANEL 1: DATA INPUT -->
+      <div class="panel">
+        <h2>1 &middot; Data Input <span class="tag">ALL CAPS AUTO</span></h2>
+        
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('seq')">Sequence / Range</button>
+          <button class="tab-btn" onclick="switchTab('list')">Paste List</button>
+          <button class="tab-btn" onclick="switchTab('csv')">CSV Import</button>
+        </div>
+
+        <!-- TAB 1: SEQUENCE GENERATOR -->
+        <div id="tab-seq" class="tab-pane">
+          <div class="row tight">
+            <div class="field">
+              <label>Prefix (Capital)</label>
+              <input type="text" id="seqPrefix" class="uppercase-input" value="P-" placeholder="e.g. P-" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="field small">
+              <label>Start</label>
+              <input type="number" id="seqStart" value="27" min="0">
+            </div>
+            <div class="field small">
+              <label>End</label>
+              <input type="number" id="seqEnd" value="52" min="1">
+            </div>
+            <div class="field small">
+              <label>Step</label>
+              <input type="number" id="seqStep" value="1" min="1">
+            </div>
+          </div>
+
+          <div class="row tight">
+            <div class="field">
+              <label>Zero Padding</label>
+              <select id="seqPad">
+                <option value="0" selected>None (e.g. 27, 28...)</option>
+                <option value="2">2 Digits (e.g. 01, 02...)</option>
+                <option value="3">3 Digits (e.g. 001, 002...)</option>
+                <option value="4">4 Digits (e.g. 0001, 0002...)</option>
+                <option value="5">5 Digits (e.g. 00001...)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Suffix (Capital)</label>
+              <input type="text" id="seqSuffix" class="uppercase-input" placeholder="Optional (e.g. -A)" oninput="this.value = this.value.toUpperCase()">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MANUAL LIST -->
+        <div id="tab-list" class="tab-pane" style="display:none;">
+          <label>Paste Values (One per line - Auto Uppercase)</label>
+          <textarea id="manualListInput" class="uppercase-input" placeholder="P-27&#10;P-28&#10;P-29&#10;P-30&#10;P-31" oninput="this.value = this.value.toUpperCase()"></textarea>
+          <div class="desc" style="margin-top:4px;">Tip: Paste tab/comma separated text (e.g., <code>P-27, SHELF A</code>) for code &amp; subtitle.</div>
+        </div>
+
+        <!-- TAB 3: FILE IMPORT (EXCEL / CSV) -->
+        <div id="tab-csv" class="tab-pane" style="display:none;">
+          <div class="dropzone" id="dropZone" onclick="document.getElementById('csvFileInput').click()">
+            <div class="dropzone-icon">📁</div>
+            <div class="dropzone-text" id="uploadFileName">Click to select or drop Excel (.xlsx, .xls) / CSV here</div>
+            <div class="dropzone-sub">Supports PALLET_CODE.xlsx &amp; multi-column spreadsheets</div>
+          </div>
+          <input type="file" id="csvFileInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleFileUpload(this.files[0])">
+          <div class="row tight" id="columnSelectRow" style="margin-top:10px; display:none;">
+            <div class="field">
+              <label>Target Code Column</label>
+              <select id="csvCodeCol" onchange="generateData()"><option value="0">Column 1</option></select>
+            </div>
+            <div class="field">
+              <label>Title Column (Optional)</label>
+              <select id="csvTitleCol" onchange="generateData()"><option value="-1">Same as Code</option></select>
+            </div>
+          </div>
+          <div class="desc" id="csvStatus" style="margin-top:6px;">No file loaded yet.</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary btn-full" onclick="generateData()">Generate Code Batch</button>
+        </div>
+      </div>
+
+      <!-- PANEL 2: LABEL SIZING & DIMENSIONS -->
+      <div class="panel">
+        <h2>
+          2 &middot; Sizing &amp; Dimensions
+          <span class="tag">LANDSCAPE DEFAULT</span>
+        </h2>
+        <div class="desc">Standard warehouse horizontal presets &bull; Custom dimensions &bull; Centered vertical distribution.</div>
+
+        <div class="row">
+          <div class="field wide">
+            <label>Size Preset</label>
+            <select id="sizePresetSelect" onchange="handleSizePresetChange()">
+              <optgroup label="DataMatrix &amp; Specialized Presets">
+                <option value="3x3.5-p">★ 3&Prime; &times; 3.5&Prime; (DataMatrix Pallet Sticker - 5mm Margin)</option>
+                <option value="3x3-sq">3&Prime; &times; 3&Prime; (DataMatrix Square Sticker)</option>
+              </optgroup>
+              <optgroup label="Standard Warehouse Labels (Landscape Default)">
+                <option value="6x3-l" selected>★ 6&Prime; &times; 3&Prime; (6 &times; 3 Inch Landscape - Warehouse Default)</option>
+                <option value="6x4-l">★ 6&Prime; &times; 4&Prime; (6 &times; 4 Inch Landscape Shipping)</option>
+                <option value="4x3-l">4&Prime; &times; 3&Prime; (Warehouse Rack / Bin)</option>
+                <option value="4x2-l">4&Prime; &times; 2&Prime; (Standard Shelf / Rack)</option>
+                <option value="3x2-l">3&Prime; &times; 2&Prime; (Standard Product Barcode)</option>
+                <option value="2x1-l">2&Prime; &times; 1&Prime; (Shelf Lip / Item Label)</option>
+              </optgroup>
+              <optgroup label="Portrait Labels">
+                <option value="4x6-p">4&Prime; &times; 6&Prime; (Standard Shipping Portrait)</option>
+                <option value="3x4-p">3&Prime; &times; 4&Prime; (Portrait Bin Label)</option>
+                <option value="2x3-p">2&Prime; &times; 3&Prime; (Portrait Tag)</option>
+                <option value="3x6-p">3&Prime; &times; 6&Prime; (Portrait Long Strip)</option>
+                <option value="1.5x0.5-l">1.5&Prime; &times; 0.5&Prime; (Mini Asset / Jewelry)</option>
+              </optgroup>
+              <optgroup label="Multi-Label Sheet Formats">
+                <option value="sheet-a4-photo">A4 Multi-Grid Sheet (6 cols)</option>
+                <option value="sheet-a4-24">A4 Sheet (24 Labels - 3 &times; 8)</option>
+                <option value="sheet-a4-30">A4 Sheet (30 Labels - 3 &times; 10)</option>
+                <option value="sheet-a4-65">A4 Mini Labels (65 Labels - 5 &times; 13)</option>
+                <option value="sheet-letter-30">US Letter Sheet (30 Labels - 3 &times; 10)</option>
+              </optgroup>
+              <optgroup label="Custom Options">
+                <option value="custom">Custom Dimensions &amp; Units...</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Dimensions Box -->
+        <div id="customDimsBox" style="background:#FCFBF7; border:1px dashed var(--border); padding:12px; margin-bottom:12px; display:none;">
+          <div class="row tight">
+            <div class="field">
+              <label>Width</label>
+              <input type="number" id="dimWidth" value="6" step="0.01" min="0.1" onchange="updateDimensions()">
+            </div>
+            <div class="field">
+              <label>Height</label>
+              <input type="number" id="dimHeight" value="3" step="0.01" min="0.1" onchange="updateDimensions()">
+            </div>
+            <div class="field medium">
+              <label>Unit</label>
+              <select id="dimUnit" onchange="updateDimensions()">
+                <option value="in" selected>Inches (in)</option>
+                <option value="mm">Millimeters (mm)</option>
+                <option value="cm">Centimeters (cm)</option>
+                <option value="px">Pixels (px @ 96dpi)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Grid Preview Columns</label>
+            <input type="number" id="gridCols" value="4" min="1" max="16" onchange="renderPreview()">
+          </div>
+          <div class="field">
+            <label>Orientation</label>
+            <select id="labelOrientation" onchange="toggleOrientation()">
+              <option value="landscape" selected>Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: CODE TYPE & TYPOGRAPHY -->
+      <div class="panel">
+        <h2>3 &middot; Code Type &amp; Typography <span class="tag">SELECT ENGINE</span></h2>
+
+        <!-- Interactive Code Type Selector Cards -->
+        <label>Select Code Symbology Engine</label>
+        <div class="code-type-selector">
+          <div class="code-type-card active" data-type="barcode" onclick="setCodeType('barcode')">
+            <span class="icon">🏷️</span>
+            <div class="name">1D Barcode</div>
+            <div class="subtag">Code 128 / 39 / EAN</div>
+          </div>
+          <div class="code-type-card" data-type="datamatrix" onclick="setCodeType('datamatrix')">
+            <span class="icon">⬛</span>
+            <div class="name">Data Matrix</div>
+            <div class="subtag">2D Industrial ECC 200</div>
+          </div>
+          <div class="code-type-card" data-type="qrcode" onclick="setCodeType('qrcode')">
+            <span class="icon">📱</span>
+            <div class="name">QR Code</div>
+            <div class="subtag">2D Matrix Link/Text</div>
+          </div>
+        </div>
+
+        <!-- Contextual Barcode Formats (Shown when 1D Barcode is active) -->
+        <div id="barcodeSymbologyWrap" class="row tight">
+          <div class="field wide">
+            <label>Barcode Symbology Standard</label>
+            <select id="barcodeFormat" onchange="renderPreview()">
+              <option value="CODE128" selected>Code 128 (Universal Logistics - Recommended)</option>
+              <option value="CODE39">Code 39 (Alphanumeric Industrial)</option>
+              <option value="EAN13">EAN-13 (Standard Retail Product)</option>
+              <option value="UPC">UPC-A (US Retail Standard)</option>
+              <option value="ITF14">ITF-14 (Outer Carton Logistics)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Contextual Data Matrix Options (Shown when Data Matrix is active) -->
+        <div id="datamatrixOptionsWrap" style="display:none; background:#FCFBF7; border:1px dashed var(--border); padding:10px; margin-bottom:12px; border-radius:2px;">
+          <div class="row tight">
+            <div class="field">
+              <label>Data Matrix Shape</label>
+              <select id="datamatrixShape" onchange="renderPreview()">
+                <option value="square" selected>Square ECC 200 (Industrial Pallet Standard)</option>
+                <option value="rectangular">Rectangular DMRE (Compact Narrow Edge)</option>
+              </select>
+            </div>
+            <div class="field small">
+              <label>Safety Margin (mm)</label>
+              <input type="number" id="marginMm" value="5.0" min="0" max="25" step="0.5" onchange="renderPreview()">
+            </div>
+          </div>
+          <div class="row tight" style="margin-top:6px; margin-bottom:0;">
+            <div class="field wide">
+              <label class="toggle-label">
+                <input type="checkbox" id="showCutLineCheck" checked onchange="renderPreview()">
+                Draw 5mm Trimming / Cut Line Guide (Sticker Border)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Font Selector -->
+        <div class="row tight">
+          <div class="field wide">
+            <label>Font Family (Clean &amp; Round 'O')</label>
+            <select id="fontFamily" onchange="handleFontChange()">
+              <optgroup label="Clean Geometric Sans-Serif">
+                <option value="Inter" selected>★ Inter (Modern, Clean &amp; Round 'O' - Recommended)</option>
+                <option value="Plus Jakarta Sans">★ Plus Jakarta Sans (Crisp Geometric Wide 'O')</option>
+                <option value="Montserrat">★ Montserrat (Classic Wide Circular 'O')</option>
+                <option value="Outfit">★ Outfit (Super Round Circular 'O')</option>
+                <option value="Poppins">★ Poppins (Bold Rounded Curves)</option>
+                <option value="Barlow">★ Barlow (Wide Proportional Industrial)</option>
+                <option value="Arial">Arial / Helvetica (Standard Neutral)</option>
+              </optgroup>
+              <optgroup label="Monospaced">
+                <option value="JetBrains Mono">JetBrains Mono (Slashed Zero)</option>
+                <option value="Roboto Mono">Roboto Mono (Slashed Zero)</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Header Text Position</label>
+            <select id="textPosition" onchange="renderPreview()">
+              <option value="top" selected>Top</option>
+              <option value="bottom">Bottom</option>
+              <option value="both">Both Top &amp; Bottom</option>
+              <option value="none">None (Code Only)</option>
+            </select>
+          </div>
+          <div class="field small">
+            <label>Font Weight</label>
+            <select id="fontWeight" onchange="renderPreview()">
+              <option value="600">Semi-Bold</option>
+              <option value="700" selected>Bold</option>
+              <option value="800">Heavy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field small">
+            <label>Text Size (px)</label>
+            <input type="number" id="fontSize" value="22" min="8" max="96" oninput="renderPreview()" onchange="renderPreview()">
+          </div>
+          <div class="field small">
+            <label>Letter Spacing</label>
+            <input type="number" id="letterSpacing" value="1" min="0" max="30" step="0.5" oninput="renderPreview()" onchange="renderPreview()">
+          </div>
+        </div>
+
+        <!-- Width & Height Ratio Sliders -->
+        <div class="row tight">
+          <div class="field">
+            <label>Code Width (% of Label)</label>
+            <div class="range-wrap">
+              <input type="range" id="barcodeWidthRatio" min="30" max="96" value="90" oninput="document.getElementById('bcWidthVal').textContent=this.value+'%'; renderPreview();">
+              <span class="range-val" id="bcWidthVal">90%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Code Height (% of Label)</label>
+            <div class="range-wrap">
+              <input type="range" id="barcodeHeightRatio" min="20" max="85" value="70" oninput="document.getElementById('bcHeightVal').textContent=this.value+'%'; renderPreview();">
+              <span class="range-val" id="bcHeightVal">70%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight" style="margin-top:4px;">
+          <div class="field wide">
+            <label class="toggle-label">
+              <input type="checkbox" id="enableSlashedZero" onchange="renderPreview()">
+              Enable Slashed Zero (&Oslash;) on numeric zero digits (keeps 'O' open and round)
+            </label>
+          </div>
+        </div>
+
+        <!-- Fine-Tuning Drawer -->
+        <details>
+          <summary>Fine-Tuning (Margins, Borders, Colors, Quiet Zone)</summary>
+          <div class="details-content">
+            <div class="row tight">
+              <div class="field">
+                <label>Border Style (Grid / Cut Lines)</label>
+                <select id="borderStyle" onchange="renderPreview()">
+                  <option value="solid-light" selected>Light Solid (As in Photo Grid)</option>
+                  <option value="solid-dark">Dark Solid Line</option>
+                  <option value="dashed">Dashed Cut Line</option>
+                  <option value="none">No Border (Pre-cut labels)</option>
+                </select>
+              </div>
+              <div class="field small">
+                <label>Padding (px)</label>
+                <input type="number" id="labelPadding" value="12" min="0" max="50" onchange="renderPreview()">
+              </div>
+            </div>
+
+            <div class="row tight">
+              <div class="field small">
+                <label>Text Color</label>
+                <input type="color" id="textColor" value="#000000" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+              <div class="field small">
+                <label>Code Color</label>
+                <input type="color" id="barColor" value="#000000" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+              <div class="field small">
+                <label>Background</label>
+                <input type="color" id="bgColor" value="#FFFFFF" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- PANEL 4: EXPORT & PRINT -->
+      <div class="panel">
+        <h2>4 &middot; Export &amp; Print <span class="tag">MASTER ROLL ENGINE</span></h2>
+        
+        <div class="row tight">
+          <div class="field wide">
+            <label>PDF Export Layout Mode</label>
+            <select id="pdfMode" onchange="togglePdfMode()">
+              <option value="master-roll" selected>🏭 Master Gang Sheet / Roll PDF (Multi-Column Grid for Printing Press)</option>
+              <option value="single-up">🏷️ 1-Up Roll PDF (Single Label Per Page for Zebra/Thermal)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Master Roll / Multi-Column Settings Box -->
+        <div id="masterRollSettings" style="background:#FCFBF7; border:1px dashed var(--border); padding:12px; margin-bottom:12px; border-radius:2px;">
+          <div class="row tight">
+            <div class="field">
+              <label>Roll Media / Press Preset</label>
+              <select id="rollMediaPreset" onchange="handleRollMediaChange()">
+                <option value="3ft" selected>★ 3 Feet Roll (36" / 914 mm — 6 Cols for 6×3")</option>
+                <option value="4ft">★ 4 Feet Roll (48" / 1219 mm — 8 Cols for 6×3")</option>
+                <option value="2ft">2 Feet Roll (24" / 610 mm — 4 Cols for 6×3")</option>
+                <option value="custom-cols">Custom Column Count (1 to 24 Columns)</option>
+                <option value="sheet-a4">A4 Paper Grid (210 × 297 mm)</option>
+                <option value="sheet-a3">A3 Paper Grid (297 × 420 mm)</option>
+              </select>
+            </div>
+            <div class="field small">
+              <label>Columns</label>
+              <input type="number" id="pdfColumns" value="6" min="1" max="24" onchange="syncPdfColumns()">
+            </div>
+          </div>
+
+          <div class="row tight">
+            <div class="field">
+              <label>Inter-Label Gap (Inches)</label>
+              <input type="number" id="labelGap" value="0.0" step="0.05" min="0" max="2.0">
+            </div>
+            <div class="field">
+              <label>Roll Page Format</label>
+              <select id="rollPageFormat">
+                <option value="continuous" selected>Single Continuous Roll (1 Long Page)</option>
+                <option value="paginated-5">Paginated (5 Rows Per Page)</option>
+                <option value="paginated-10">Paginated (10 Rows Per Page)</option>
+                <option value="paginated-20">Paginated (20 Rows Per Page)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field small">
+            <label>Row From</label>
+            <input type="number" id="rangeStartInput" value="1" min="1">
+          </div>
+          <div class="field small">
+            <label>Row To</label>
+            <input type="number" id="rangeEndInput" value="500" min="1">
+          </div>
+          <div class="field">
+            <label>Master Export DPI</label>
+            <select id="exportDpi">
+              <option value="300" selected>300 DPI (Commercial Press Quality)</option>
+              <option value="600">600 DPI (Ultra Sharp Laser / Thermal)</option>
+              <option value="150">150 DPI (Fast Screen Draft)</option>
+            </select>
+          </div>
+          <div class="field small">
+            <label>ZIP Batch</label>
+            <input type="number" id="zipBatchSize" value="500" min="50" max="2000" step="50">
+          </div>
+        </div>
+
+        <div class="preset-bar" style="margin-bottom:12px;">
+          <button class="btn-chip" type="button" onclick="setRangePreset(1, 100)">1 - 100</button>
+          <button class="btn-chip" type="button" onclick="setRangePreset(1, 500)">1 - 500</button>
+          <button class="btn-chip" type="button" onclick="setRangePreset(501, 1000)">501 - 1000</button>
+          <button class="btn-chip" type="button" onclick="setRangePreset(1, 'all')">Select All Rows</button>
+        </div>
+
+        <div class="actions">
+          <button class="btn-accent btn-full" onclick="exportPDF()">
+            <span>📥 Export Master PDF Document</span>
+          </button>
+          <button class="btn-ghost" style="flex:1;" onclick="downloadAllZIP('png')">
+            <span>📦 Batch ZIP (PNG)</span>
+          </button>
+          <button class="btn-ghost" style="flex:1;" onclick="downloadAllZIP('svg')">
+            <span>📐 Batch ZIP (Vector SVG)</span>
+          </button>
+          <button class="btn-ghost" style="flex:1;" onclick="downloadCSVData()">
+            <span>📊 CSV Data</span>
+          </button>
+        </div>
+
+        <!-- Progress Bar for Large Batch Processing -->
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+          <div class="progress-note" id="progressNote">Ready</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: PREVIEWS & INSPECTOR -->
+    <div class="preview-col">
+
+      <!-- 1:1 PHYSICAL PROPORTIONAL LIVE INSPECTOR -->
+      <div class="inspector-card-wrapper">
+        <div class="inspector-header">
+          <div class="inspector-title">
+            <span>True 1:1 Live Inspector</span>
+            <span class="inspector-dim-tag" id="singleDimTag">6 &times; 3 in</span>
+          </div>
+          <div class="inspector-nav">
+            <button class="btn-ghost btn-small" onclick="prevSingleLabel()" title="Previous Label">&larr; Prev</button>
+            <span class="inspector-nav-text" id="singleNavText">Label 1 of 0</span>
+            <button class="btn-ghost btn-small" onclick="nextSingleLabel()" title="Next Label">Next &rarr;</button>
+          </div>
+        </div>
+
+        <div class="inspector-stage">
+          <div class="dimension-marker-top" id="dimensionMarkerTop">&larr; 6.0 in (152.4 mm) &rarr;</div>
+          <div class="single-label-frame" id="singleLabelFrame"></div>
+        </div>
+
+        <div class="inspector-actions-bar">
+          <button class="btn-ghost btn-small" onclick="downloadCurrentSingle('png')">Download PNG (300 DPI)</button>
+          <button class="btn-ghost btn-small" onclick="downloadCurrentSingle('svg')">Download Vector SVG</button>
+          <button class="btn-primary btn-small" onclick="printSingleLabel()">Direct Print Label</button>
+        </div>
+      </div>
+
+      <!-- BATCH MULTI-COLUMN SHEET GRID PREVIEW -->
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h2 style="margin:0;">Batch Multi-Column Sheet Grid</h2>
+            <div class="desc" id="previewMeta" style="margin:2px 0 0;">Generated labels live sheet preview.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-ghost btn-small" onclick="prevGridPage()">&larr; Prev Page</button>
+            <span id="gridPageText" style="font-family:var(--mono); font-size:11.5px; font-weight:600;">Page 1 of 1</span>
+            <button class="btn-ghost btn-small" onclick="nextGridPage()">Next Page &rarr;</button>
+          </div>
+        </div>
+
+        <div class="preview-container">
+          <div class="barcode-sheet-grid" id="barcodeGrid"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    Industrial Code &amp; Label Master Press System &bull; High Precision Vector &amp; Thermal Printing Architecture &bull; Client Ready
+  </footer>
+
+</div>
+
+<!-- EXTERNAL LIBRARIES -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bwip-js/4.11.4/bwip-js-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- MODULAR APPLICATION SCRIPTS (LOADED IN ORDER) -->
+<script src="js/state.js"></script>
+<script src="js/renderers/code-engine.js"></script>
+<script src="js/data-input.js"></script>
+<script src="js/preview.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

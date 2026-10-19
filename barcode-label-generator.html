@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Industrial High-Quality Barcode & Label Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&family=Montserrat:wght@600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=Poppins:wght@600;700;800&family=Roboto+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F4EF;
+  --panel: #FFFFFF;
+  --ink: #14171F;
+  --ink-soft: #555E6D;
+  --ink-muted: #8892A0;
+  --border: #DCD7C9;
+  --border-subtle: #EBE7DD;
+  --safety: #FFC72C;
+  --safety-dark: #E5AC00;
+  --rack-orange: #E65A15;
+  --brand-blue: #1D63ED;
+  --ok: #1B8A5A;
+  --danger: #D32F2F;
+  --mono: 'JetBrains Mono', monospace;
+  --cond: 'Barlow Condensed', sans-serif;
+  --sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 24px 20px 80px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+/* Header */
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 4px solid var(--ink);
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.hero h1 {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 38px;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-transform: uppercase;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero h1 .badge {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--safety);
+  color: var(--ink);
+  padding: 4px 8px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+.hero .sub {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-top: 6px;
+  max-width: 650px;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.stat {
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 16px;
+  min-width: 110px;
+  border-top: 4px solid var(--safety);
+  box-shadow: var(--shadow-sm);
+}
+.stat .n {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 22px;
+  display: block;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.stat .l {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #B5BBC6;
+  margin-top: 3px;
+}
+
+/* Grid Layout */
+.layout-grid {
+  display: grid;
+  grid-template-columns: 440px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .layout-grid {
+    grid-template-columns: 100%;
+  }
+}
+.preview-col {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Panels */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.panel h2 {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 19px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.panel h2 .tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--safety);
+  color: var(--ink);
+  padding: 2px 8px;
+  font-weight: 600;
+}
+.panel .desc {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
+  gap: 4px;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 8px 14px;
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+.tab-btn:hover {
+  color: var(--ink);
+  background: rgba(0,0,0,0.02);
+}
+.tab-btn.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  background: #FCFBF7;
+}
+
+/* Form controls */
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.row.tight {
+  margin-bottom: 8px;
+  gap: 8px;
+}
+label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+input[type=text], input[type=number], select, textarea {
+  border: 1px solid var(--border);
+  background: #FCFBF7;
+  padding: 8px 10px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--ink);
+  width: 100%;
+  border-radius: 2px;
+  transition: border 0.15s, outline 0.15s;
+}
+input.uppercase-input, textarea.uppercase-input {
+  text-transform: uppercase;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--safety);
+  outline-offset: 1px;
+  border-color: var(--ink);
+}
+textarea {
+  font-family: var(--sans);
+  resize: vertical;
+  min-height: 85px;
+}
+.field {
+  flex: 1;
+  min-width: 110px;
+}
+.field.small {
+  max-width: 90px;
+}
+.field.medium {
+  max-width: 140px;
+}
+.field.wide {
+  min-width: 220px;
+  flex: 2;
+}
+
+.range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.range-wrap input[type=range] {
+  flex: 1;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+.range-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  min-width: 44px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 0;
+}
+.toggle-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ink);
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Buttons */
+button {
+  font-family: var(--cond);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #000;
+  box-shadow: var(--shadow-sm);
+}
+.btn-accent {
+  background: var(--safety);
+  color: var(--ink);
+}
+.btn-accent:hover {
+  background: var(--safety-dark);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 8px 13px;
+}
+.btn-ghost:hover {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-small {
+  padding: 5px 10px;
+  font-size: 11.5px;
+}
+.btn-full {
+  width: 100%;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* ================= SINGLE LABEL INSPECTOR ================= */
+.inspector-card-wrapper {
+  background: #EFECE6;
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 20px;
+  border-radius: 2px;
+}
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.inspector-title {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inspector-dim-tag {
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+.inspector-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inspector-nav-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 120px;
+  text-align: center;
+}
+
+/* True Aspect Ratio Label Stage */
+.inspector-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 16px 0;
+}
+.dimension-marker-top {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.single-label-frame {
+  background: #FFFFFF;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid #C4BEB1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+.single-label-frame.bordered {
+  border: 1px solid #D0D5DD;
+}
+.single-label-frame.bordered-dark {
+  border: 1px solid #000000;
+}
+.single-label-frame.bordered-dashed {
+  border: 1px dashed #94A3B8;
+}
+
+.inspector-actions-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* ================= BATCH GRID PREVIEW ================= */
+.preview-container {
+  background: #EAE8E0;
+  border: 1px solid var(--border);
+  padding: 20px;
+  min-height: 340px;
+  max-height: 520px;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+.preview-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.preview-container::-webkit-scrollbar-track {
+  background: #DCD7C9;
+  border-radius: 4px;
+}
+.preview-container::-webkit-scrollbar-thumb {
+  background: #8892A0;
+  border-radius: 4px;
+}
+.preview-container::-webkit-scrollbar-thumb:hover {
+  background: #14171F;
+}
+
+.barcode-sheet-grid {
+  display: grid;
+  background: #FFFFFF;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  width: max-content;
+  border-collapse: collapse;
+}
+
+.barcode-item {
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.barcode-item.bordered {
+  border: 1px solid #E2E8F0;
+}
+.barcode-item.bordered-dark {
+  border: 1px solid #000000;
+}
+.barcode-item.bordered-dashed {
+  border: 1px dashed #CBD5E1;
+}
+.barcode-item:hover {
+  outline: 2px solid var(--safety);
+  outline-offset: -2px;
+  z-index: 2;
+}
+.barcode-item.selected-item {
+  outline: 3px solid var(--brand-blue);
+  outline-offset: -3px;
+  z-index: 3;
+}
+
+.barcode-text-top {
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  line-height: 1.1;
+  width: 100%;
+  text-align: center;
+  word-break: break-all;
+  text-transform: uppercase;
+}
+.barcode-text-bottom {
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  color: #333333;
+  margin-top: 4px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.barcode-svg-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.barcode-svg-wrap svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.item-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: none;
+  gap: 4px;
+  background: rgba(255,255,255,0.95);
+  padding: 2px 4px;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.barcode-item:hover .item-actions {
+  display: flex;
+}
+.mini-icon-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  font-size: 10px;
+  padding: 2px 5px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.mini-icon-btn:hover {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Progress bar */
+.progress-wrap {
+  display: none;
+  margin-top: 14px;
+}
+.progress-bar-bg {
+  background: var(--border);
+  height: 8px;
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  background: var(--ok);
+  height: 100%;
+  width: 0%;
+  transition: width 0.1s ease;
+}
+.progress-note {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 5px;
+  font-family: var(--mono);
+}
+
+/* Accordion Collapsible Box */
+details {
+  border: 1px solid var(--border);
+  background: #FCFBF7;
+  margin-bottom: 12px;
+  border-radius: 2px;
+}
+details[open] {
+  background: #FFFFFF;
+}
+summary {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  letter-spacing: 0.5px;
+}
+summary::-webkit-details-marker { display: none; }
+summary::after {
+  content: "＋";
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+details[open] summary::after {
+  content: "－";
+}
+.details-content {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 12px;
+  margin-top: 40px;
+  font-family: var(--mono);
+}
+
+/* ================= PRINT STYLES ================= */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  body {
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .wrap > *:not(#printArea),
+  .inspector-card-wrapper,
+  .preview-toolbar,
+  .hero,
+  .layout-grid > *:first-child,
+  footer,
+  .item-actions {
+    display: none !important;
+  }
+  .layout-grid {
+    display: block !important;
+  }
+  .panel {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .preview-container {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .barcode-sheet-grid {
+    box-shadow: none !important;
+    page-break-after: auto;
+  }
+  .barcode-item {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO HEADER -->
+  <div class="hero">
+    <div>
+      <h1>Industrial Barcode &amp; Label Generator <span class="badge">PRO 3.4</span></h1>
+      <div class="sub">High-precision warehouse labeling system &bull; <strong>Landscape 6&times;3&Prime; Default</strong> &bull; True 1:1 Live Inspector &bull; Vector &amp; 300/600 DPI Master Output.</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n" id="statCount">0</span><span class="l">Labels</span></div>
+      <div class="stat"><span class="n" id="statSize">6 &times; 3 in</span><span class="l">Label Size</span></div>
+      <div class="stat"><span class="n" id="statPages">1</span><span class="l">Est. Pages</span></div>
+    </div>
+  </div>
+
+  <div class="layout-grid">
+
+    <!-- LEFT COLUMN: CONTROLS & SETTINGS -->
+    <div class="controls-col">
+
+      <!-- PANEL 1: DATA INPUT -->
+      <div class="panel">
+        <h2>1 &middot; Data Input <span class="tag">ALL CAPS AUTO</span></h2>
+        
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('seq')">Sequence / Range</button>
+          <button class="tab-btn" onclick="switchTab('list')">Paste List</button>
+          <button class="tab-btn" onclick="switchTab('csv')">CSV Import</button>
+        </div>
+
+        <!-- TAB 1: SEQUENCE GENERATOR -->
+        <div id="tab-seq" class="tab-pane">
+          <div class="row tight">
+            <div class="field">
+              <label>Prefix (Capital)</label>
+              <input type="text" id="seqPrefix" class="uppercase-input" value="P-" placeholder="e.g. P-" oninput="this.value = this.value.toUpperCase()">
+            </div>
+            <div class="field small">
+              <label>Start</label>
+              <input type="number" id="seqStart" value="27" min="0">
+            </div>
+            <div class="field small">
+              <label>End</label>
+              <input type="number" id="seqEnd" value="52" min="1">
+            </div>
+            <div class="field small">
+              <label>Step</label>
+              <input type="number" id="seqStep" value="1" min="1">
+            </div>
+          </div>
+
+          <div class="row tight">
+            <div class="field">
+              <label>Zero Padding</label>
+              <select id="seqPad">
+                <option value="0" selected>None (e.g. 27, 28...)</option>
+                <option value="2">2 Digits (e.g. 01, 02...)</option>
+                <option value="3">3 Digits (e.g. 001, 002...)</option>
+                <option value="4">4 Digits (e.g. 0001, 0002...)</option>
+                <option value="5">5 Digits (e.g. 00001...)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Suffix (Capital)</label>
+              <input type="text" id="seqSuffix" class="uppercase-input" placeholder="Optional (e.g. -A)" oninput="this.value = this.value.toUpperCase()">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MANUAL LIST -->
+        <div id="tab-list" class="tab-pane" style="display:none;">
+          <label>Paste Barcode Values (One per line - Auto Uppercase)</label>
+          <textarea id="manualListInput" class="uppercase-input" placeholder="P-27&#10;P-28&#10;P-29&#10;P-30&#10;P-31" oninput="this.value = this.value.toUpperCase()"></textarea>
+          <div class="desc" style="margin-top:4px;">Tip: Paste tab/comma separated text (e.g., <code>P-27, SHELF A</code>) for code &amp; subtitle.</div>
+        </div>
+
+        <!-- TAB 3: CSV IMPORT -->
+        <div id="tab-csv" class="tab-pane" style="display:none;">
+          <label>Upload CSV File</label>
+          <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVUpload(event)">
+          <div class="row tight" style="margin-top:10px;">
+            <div class="field">
+              <label>Barcode Column</label>
+              <select id="csvCodeCol"><option value="0">Column 1</option></select>
+            </div>
+            <div class="field">
+              <label>Title Column (Optional)</label>
+              <select id="csvTitleCol"><option value="-1">Same as Code</option></select>
+            </div>
+          </div>
+          <div class="desc" id="csvStatus" style="margin-top:6px;">No CSV loaded yet.</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary btn-full" onclick="generateData()">Generate Barcodes</button>
+        </div>
+      </div>
+
+      <!-- PANEL 2: LABEL SIZING & DIMENSIONS -->
+      <div class="panel">
+        <h2>
+          2 &middot; Sizing &amp; Dimensions
+          <span class="tag">LANDSCAPE DEFAULT</span>
+        </h2>
+        <div class="desc">Standard warehouse horizontal presets &bull; Custom width/height &bull; Centered vertical distribution.</div>
+
+        <div class="row">
+          <div class="field wide">
+            <label>Size Preset</label>
+            <select id="sizePresetSelect" onchange="handleSizePresetChange()">
+              <optgroup label="Standard Warehouse Labels (Landscape Default)">
+                <option value="6x3-l" selected>★ 6&Prime; &times; 3&Prime; (6 &times; 3 Inch Landscape - Warehouse Default)</option>
+                <option value="6x4-l">★ 6&Prime; &times; 4&Prime; (6 &times; 4 Inch Landscape Shipping)</option>
+                <option value="4x3-l">4&Prime; &times; 3&Prime; (Warehouse Rack / Bin)</option>
+                <option value="4x2-l">4&Prime; &times; 2&Prime; (Standard Shelf / Rack)</option>
+                <option value="3x2-l">3&Prime; &times; 2&Prime; (Standard Product Barcode)</option>
+                <option value="2x1-l">2&Prime; &times; 1&Prime; (Shelf Lip / Item Label)</option>
+              </optgroup>
+              <optgroup label="Portrait Labels">
+                <option value="4x6-p">4&Prime; &times; 6&Prime; (Standard Shipping Portrait)</option>
+                <option value="3x4-p">3&Prime; &times; 4&Prime; (Portrait Bin Label)</option>
+                <option value="2x3-p">2&Prime; &times; 3&Prime; (Portrait Tag)</option>
+                <option value="3x6-p">3&Prime; &times; 6&Prime; (Portrait Long Strip)</option>
+                <option value="1.5x0.5-l">1.5&Prime; &times; 0.5&Prime; (Mini Asset / Jewelry)</option>
+              </optgroup>
+              <optgroup label="Multi-Label Sheet Formats">
+                <option value="sheet-a4-photo">A4 Multi-Grid Sheet (6 cols)</option>
+                <option value="sheet-a4-24">A4 Sheet (24 Labels - 3 &times; 8)</option>
+                <option value="sheet-a4-30">A4 Sheet (30 Labels - 3 &times; 10)</option>
+                <option value="sheet-a4-65">A4 Mini Labels (65 Labels - 5 &times; 13)</option>
+                <option value="sheet-letter-30">US Letter Sheet (30 Labels - 3 &times; 10)</option>
+              </optgroup>
+              <optgroup label="Custom Options">
+                <option value="custom">Custom Dimensions &amp; Units...</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Dimensions Box (Active when custom) -->
+        <div id="customDimsBox" style="background:#FCFBF7; border:1px dashed var(--border); padding:12px; margin-bottom:12px; display:none;">
+          <div class="row tight">
+            <div class="field">
+              <label>Width</label>
+              <input type="number" id="dimWidth" value="6" step="0.01" min="0.1" onchange="updateDimensions()">
+            </div>
+            <div class="field">
+              <label>Height</label>
+              <input type="number" id="dimHeight" value="3" step="0.01" min="0.1" onchange="updateDimensions()">
+            </div>
+            <div class="field medium">
+              <label>Unit</label>
+              <select id="dimUnit" onchange="updateDimensions()">
+                <option value="in" selected>Inches (in)</option>
+                <option value="mm">Millimeters (mm)</option>
+                <option value="cm">Centimeters (cm)</option>
+                <option value="px">Pixels (px @ 96dpi)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid Multi-column configuration for Sheet views -->
+        <div class="row tight">
+          <div class="field">
+            <label>Grid Preview Columns</label>
+            <input type="number" id="gridCols" value="4" min="1" max="16" onchange="renderPreview()">
+          </div>
+          <div class="field">
+            <label>Orientation</label>
+            <select id="labelOrientation" onchange="toggleOrientation()">
+              <option value="landscape" selected>Landscape</option>
+              <option value="portrait">Portrait</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: DESIGN & TYPOGRAPHY -->
+      <div class="panel">
+        <h2>3 &middot; Typography &amp; Barcode Style <span class="tag">NATURAL WIDE 'O'</span></h2>
+
+        <!-- Font Selector with Clean Proportional Fonts -->
+        <div class="row tight">
+          <div class="field wide">
+            <label>Font Family (Clean &amp; Round O)</label>
+            <select id="fontFamily" onchange="handleFontChange()">
+              <optgroup label="Clean Geometric Sans-Serif (Natural Round 'O')">
+                <option value="Inter" selected>★ Inter (Modern, Clean &amp; Round 'O' - Recommended)</option>
+                <option value="Plus Jakarta Sans">★ Plus Jakarta Sans (Crisp Geometric Wide 'O')</option>
+                <option value="Montserrat">★ Montserrat (Classic Wide Circular 'O')</option>
+                <option value="Outfit">★ Outfit (Super Round Circular 'O')</option>
+                <option value="Poppins">★ Poppins (Bold Rounded Curves)</option>
+                <option value="Barlow">★ Barlow (Wide Proportional Industrial)</option>
+                <option value="Arial">Arial / Helvetica (Standard Neutral)</option>
+              </optgroup>
+              <optgroup label="Monospaced (Fixed Width / Slashed Zero)">
+                <option value="JetBrains Mono">JetBrains Mono (Slashed Zero)</option>
+                <option value="Roboto Mono">Roboto Mono (Slashed Zero)</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Barcode Symbology</label>
+            <select id="barcodeFormat" onchange="renderPreview()">
+              <option value="CODE128" selected>Code 128 (Universal - Recommended)</option>
+              <option value="CODE39">Code 39 (Standard Alphanumeric)</option>
+              <option value="EAN13">EAN-13 (Standard Retail)</option>
+              <option value="UPC">UPC-A (US Retail)</option>
+              <option value="ITF14">ITF-14 (Carton / Logistics)</option>
+              <option value="QR">QR Code (2D Matrix)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Header Text Position</label>
+            <select id="textPosition" onchange="renderPreview()">
+              <option value="top" selected>Top</option>
+              <option value="bottom">Bottom</option>
+              <option value="both">Both Top &amp; Bottom</option>
+              <option value="none">None (Barcode Only)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field small">
+            <label>Font Weight</label>
+            <select id="fontWeight" onchange="renderPreview()">
+              <option value="600">Semi-Bold (600)</option>
+              <option value="700" selected>Bold (700)</option>
+              <option value="800">Heavy (800)</option>
+            </select>
+          </div>
+          <div class="field small">
+            <label>Text Size (px)</label>
+            <input type="number" id="fontSize" value="22" min="8" max="96" onchange="renderPreview()">
+          </div>
+          <div class="field">
+            <label>Letter Spacing (px)</label>
+            <input type="number" id="letterSpacing" value="1" min="0" max="10" step="0.5" onchange="renderPreview()">
+          </div>
+        </div>
+
+        <!-- Barcode Width & Height Ratios -->
+        <div class="row tight">
+          <div class="field">
+            <label>Barcode Width (% of Label)</label>
+            <div class="range-wrap">
+              <input type="range" id="barcodeWidthRatio" min="50" max="96" value="90" oninput="document.getElementById('bcWidthVal').textContent=this.value+'%'; renderPreview();">
+              <span class="range-val" id="bcWidthVal">90%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Barcode Height (% of Label)</label>
+            <div class="range-wrap">
+              <input type="range" id="barcodeHeightRatio" min="30" max="85" value="70" oninput="document.getElementById('bcHeightVal').textContent=this.value+'%'; renderPreview();">
+              <span class="range-val" id="bcHeightVal">70%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight" style="margin-top:4px;">
+          <div class="field wide">
+            <label class="toggle-label">
+              <input type="checkbox" id="enableSlashedZero" onchange="renderPreview()">
+              Enable Slashed Zero (Ø) on numeric zero digits (keeps 'O' open and round)
+            </label>
+          </div>
+        </div>
+
+        <!-- Advanced Style Drawer -->
+        <details>
+          <summary>Fine-Tuning (Margins, Borders, Colors, Quiet Zone)</summary>
+          <div class="details-content">
+            <div class="row tight">
+              <div class="field">
+                <label>Border Style (Grid / Cut Lines)</label>
+                <select id="borderStyle" onchange="renderPreview()">
+                  <option value="solid-light" selected>Light Solid (As in Photo Grid)</option>
+                  <option value="solid-dark">Dark Solid Line</option>
+                  <option value="dashed">Dashed Cut Line</option>
+                  <option value="none">No Border (Pre-cut labels)</option>
+                </select>
+              </div>
+              <div class="field small">
+                <label>Padding (px)</label>
+                <input type="number" id="labelPadding" value="12" min="0" max="50" onchange="renderPreview()">
+              </div>
+            </div>
+
+            <div class="row tight">
+              <div class="field small">
+                <label>Text Color</label>
+                <input type="color" id="textColor" value="#000000" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+              <div class="field small">
+                <label>Bar Color</label>
+                <input type="color" id="barColor" value="#000000" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+              <div class="field small">
+                <label>Background</label>
+                <input type="color" id="bgColor" value="#FFFFFF" onchange="renderPreview()" style="height:32px; padding:0; cursor:pointer;">
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- PANEL 4: EXPORT & BATCH DOWNLOAD -->
+      <div class="panel">
+        <h2>4 &middot; Export &amp; Print <span class="tag">MASTER ROLL ENGINE</span></h2>
+        
+        <div class="row tight">
+          <div class="field wide">
+            <label>PDF Export Layout Mode</label>
+            <select id="pdfMode" onchange="togglePdfMode()">
+              <option value="master-roll" selected>🏭 Master Gang Sheet / Roll PDF (Multi-Column Grid for Printing Press)</option>
+              <option value="single-up">🏷️ 1-Up Roll PDF (Single Label Per Page for Zebra/Thermal)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Master Roll / Multi-Column Settings Box -->
+        <div id="masterRollSettings" style="background:#FCFBF7; border:1px dashed var(--border); padding:12px; margin-bottom:12px; border-radius:2px;">
+          <div class="row tight">
+            <div class="field">
+              <label>Roll Media / Press Preset</label>
+              <select id="rollMediaPreset" onchange="handleRollMediaChange()">
+                <option value="3ft" selected>★ 3 Feet Roll (36" / 914 mm — 6 Cols for 6×3")</option>
+                <option value="4ft">★ 4 Feet Roll (48" / 1219 mm — 8 Cols for 6×3")</option>
+                <option value="2ft">2 Feet Roll (24" / 610 mm — 4 Cols for 6×3")</option>
+                <option value="custom-cols">Custom Column Count (1 to 24 Columns)</option>
+                <option value="sheet-a4">A4 Paper Grid (210 × 297 mm)</option>
+                <option value="sheet-a3">A3 Paper Grid (297 × 420 mm)</option>
+              </select>
+            </div>
+            <div class="field small">
+              <label>Columns</label>
+              <input type="number" id="pdfColumns" value="6" min="1" max="24" onchange="syncPdfColumns()">
+            </div>
+          </div>
+
+          <div class="row tight">
+            <div class="field">
+              <label>Page Format on Roll</label>
+              <select id="rollPageFormat">
+                <option value="continuous" selected>Continuous Single Roll Canvas (Full Job on 1 Long Sheet)</option>
+                <option value="paginated-10">Paginated Sheets (10 Rows per Page)</option>
+                <option value="paginated-5">Paginated Sheets (5 Rows per Page)</option>
+                <option value="paginated-20">Paginated Sheets (20 Rows per Page)</option>
+              </select>
+            </div>
+            <div class="field small">
+              <label>Label Gap</label>
+              <select id="labelGap">
+                <option value="0" selected>0" (Flush / Butt-Cut)</option>
+                <option value="0.05">0.05" (1.3 mm)</option>
+                <option value="0.1">0.10" (2.5 mm)</option>
+                <option value="0.125">0.125" (1/8")</option>
+                <option value="0.25">0.25" (1/4")</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Master Print Resolution (DPI)</label>
+            <select id="exportDpi">
+              <option value="300" selected>300 DPI (High-Precision Commercial Print)</option>
+              <option value="600">600 DPI (Ultra Razor Sharp Thermal Transfer)</option>
+              <option value="203">203 DPI (Standard Thermal Zebra/TSC)</option>
+            </select>
+          </div>
+          <div class="field small">
+            <label>ZIP Batch Size</label>
+            <input type="number" id="zipBatchSize" value="500" min="50" step="50">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" onclick="exportPDF()" style="flex:1;">
+            📄 Download Master PDF
+          </button>
+          <button class="btn-accent" onclick="window.print()" style="flex:1;">
+            🖨️ Print Direct / Sheet
+          </button>
+        </div>
+
+        <div class="actions">
+          <button class="btn-ghost" onclick="downloadAllZIP('png')" style="flex:1;">
+            📦 Download PNGs (ZIP)
+          </button>
+          <button class="btn-ghost" onclick="downloadAllZIP('svg')" style="flex:1;">
+            ⚡ Download SVGs (ZIP)
+          </button>
+          <button class="btn-ghost" onclick="downloadCSVData()" style="flex:1;">
+            📊 CSV
+          </button>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+          <div class="progress-note" id="progressNote">Preparing batch...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: LIVE INSPECTOR & BATCH VISUALIZER -->
+    <div class="preview-col">
+
+      <!-- SECTION 1: DEDICATED SINGLE LABEL INSPECTOR -->
+      <div class="inspector-card-wrapper">
+        <div class="inspector-header">
+          <div>
+            <div class="inspector-title">
+              🎯 Single Label Inspector
+              <span class="inspector-dim-tag" id="singleDimTag">6.00" &times; 3.00"</span>
+            </div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">True 1:1 physical aspect ratio inspection. Barcode scales smoothly across the label width.</div>
+          </div>
+          <div class="inspector-nav">
+            <button class="btn-ghost btn-small" onclick="prevSingleLabel()">◀ Prev</button>
+            <span class="inspector-nav-text" id="singleNavText">Label 1 of 26</span>
+            <button class="btn-ghost btn-small" onclick="nextSingleLabel()">Next ▶</button>
+          </div>
+        </div>
+
+        <div class="inspector-stage">
+          <div class="dimension-marker-top" id="dimensionMarkerTop">← 6.00 in (152.4 mm) →</div>
+          <div class="single-label-frame" id="singleLabelFrame">
+            <!-- Dynamically populated 1:1 label -->
+          </div>
+        </div>
+
+        <div class="inspector-actions-bar">
+          <button class="btn-ghost btn-small" onclick="downloadCurrentSingle('svg')">⚡ Download Single SVG</button>
+          <button class="btn-ghost btn-small" onclick="downloadCurrentSingle('png')">⬇ Download Single PNG (300 DPI)</button>
+          <button class="btn-primary btn-small" onclick="printSingleLabel()">🖨️ Print Single Label</button>
+        </div>
+      </div>
+
+      <!-- SECTION 2: BATCH SHEET / GRID PREVIEW -->
+      <div class="panel" style="margin-bottom:0;">
+        <div class="preview-toolbar">
+          <div>
+            <h2 style="margin:0; font-size:18px;">📋 Batch Sheet &amp; Grid View <span class="tag" style="font-size:10px; vertical-align:middle;">4 ROWS ACTIVE</span></h2>
+            <div class="preview-meta" id="previewMeta">Rendering 24 labels &bull; Click any label to inspect above</div>
+          </div>
+          <div class="inspector-nav" id="gridPaginationNav">
+            <button class="btn-ghost btn-small" onclick="prevGridPage()">◀ Prev</button>
+            <span class="inspector-nav-text" id="gridPageText" style="min-width:90px;">Page 1 of 1</span>
+            <button class="btn-ghost btn-small" onclick="nextGridPage()">Next ▶</button>
+          </div>
+        </div>
+
+        <!-- Scrollable preview viewport -->
+        <div class="preview-container" id="previewContainer">
+          <div id="printArea">
+            <div class="barcode-sheet-grid" id="barcodeGrid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    Industrial Barcode &amp; Label Generator &bull; 100% Capitalized Codes &bull; True 1:1 Physical Scaling &bull; Offline Secure
+  </footer>
+
+</div>
+
+<!-- REQUIRED SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+/* ================= STATE MANAGEMENT ================= */
+let activeTab = 'seq';
+let generatedItems = [];
+let currentSelectedIndex = 0;
+let gridCurrentPage = 0;
+let currentDimensions = {
+  widthIn: 6.0,
+  heightIn: 3.0,
+  unit: 'in',
+  widthRaw: 6.0,
+  heightRaw: 3.0,
+  isSheet: false
+};
+let isGeneratingZip = false;
+
+/* ================= PRESET SIZE DEFINITIONS ================= */
+const SIZE_PRESETS = {
+  '6x3-l': { w: 6, h: 3, unit: 'in', cols: 4, orient: 'landscape', isSheet: false, label: '6" × 3" Landscape (Warehouse Standard)' },
+  '6x4-l': { w: 6, h: 4, unit: 'in', cols: 3, orient: 'landscape', isSheet: false, label: '6" × 4" Shipping (Landscape)' },
+  '4x3-l': { w: 4, h: 3, unit: 'in', cols: 4, orient: 'landscape', isSheet: false, label: '4" × 3" Rack/Bin' },
+  '4x2-l': { w: 4, h: 2, unit: 'in', cols: 4, orient: 'landscape', isSheet: false, label: '4" × 2" Shelf Label' },
+  '3x2-l': { w: 3, h: 2, unit: 'in', cols: 5, orient: 'landscape', isSheet: false, label: '3" × 2" Sticker' },
+  '2x1-l': { w: 2, h: 1, unit: 'in', cols: 6, orient: 'landscape', isSheet: false, label: '2" × 1" Shelf Lip' },
+  '4x6-p': { w: 4, h: 6, unit: 'in', cols: 4, orient: 'portrait', isSheet: false, label: '4" × 6" Shipping' },
+  '3x4-p': { w: 3, h: 4, unit: 'in', cols: 5, orient: 'portrait', isSheet: false, label: '3" × 4" Bin' },
+  '2x3-p': { w: 2, h: 3, unit: 'in', cols: 6, orient: 'portrait', isSheet: false, label: '2" × 3" Tag' },
+  '3x6-p': { w: 3, h: 6, unit: 'in', cols: 6, orient: 'portrait', isSheet: false, label: '3" × 6" Portrait Strip' },
+  '1.5x0.5-l': { w: 1.5, h: 0.5, unit: 'in', cols: 8, orient: 'landscape', isSheet: false, label: '1.5" × 0.5" Mini' },
+  'sheet-a4-photo': { w: 1.35, h: 1.7, unit: 'in', cols: 6, orient: 'portrait', isSheet: true, label: 'A4 Grid (Photo)' },
+  'sheet-a4-24': { w: 70, h: 37, unit: 'mm', cols: 3, orient: 'landscape', isSheet: true, label: 'A4 24-up' },
+  'sheet-a4-30': { w: 70, h: 29.7, unit: 'mm', cols: 3, orient: 'landscape', isSheet: true, label: 'A4 30-up' },
+  'sheet-a4-65': { w: 38.1, h: 21.2, unit: 'mm', cols: 5, orient: 'landscape', isSheet: true, label: 'A4 65-up' },
+  'sheet-letter-30': { w: 2.625, h: 1.0, unit: 'in', cols: 3, orient: 'landscape', isSheet: true, label: 'Letter 30-up' }
+};
+
+/* ================= INITIALIZATION ================= */
+window.addEventListener('DOMContentLoaded', () => {
+  handleSizePresetChange();
+  generateData();
+});
+
+/* ================= FONT HANDLER & PREVIEW ================= */
+function handleFontChange() {
+  renderPreview();
+}
+
+/* ================= TAB SWITCHING ================= */
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (tab === 'seq' && i === 0) || (tab === 'list' && i === 1) || (tab === 'csv' && i === 2));
+  });
+  document.getElementById('tab-seq').style.display = tab === 'seq' ? 'block' : 'none';
+  document.getElementById('tab-list').style.display = tab === 'list' ? 'block' : 'none';
+  document.getElementById('tab-csv').style.display = tab === 'csv' ? 'block' : 'none';
+}
+
+/* ================= DATA GENERATION (ALWAYS UPPERCASE) ================= */
+function generateData() {
+  generatedItems = [];
+  
+  if (activeTab === 'seq') {
+    const prefix = document.getElementById('seqPrefix').value.trim().toUpperCase();
+    const start = parseInt(document.getElementById('seqStart').value) || 1;
+    const end = parseInt(document.getElementById('seqEnd').value) || 1;
+    const step = parseInt(document.getElementById('seqStep').value) || 1;
+    const pad = parseInt(document.getElementById('seqPad').value) || 0;
+    const suffix = document.getElementById('seqSuffix').value.trim().toUpperCase();
+
+    const min = Math.min(start, end);
+    const max = Math.max(start, end);
+
+    for (let i = min; i <= max; i += step) {
+      const numStr = pad > 0 ? String(i).padStart(pad, '0') : String(i);
+      const code = `${prefix}${numStr}${suffix}`.toUpperCase();
+      generatedItems.push({ code, title: code, subtitle: '' });
+    }
+  } else if (activeTab === 'list') {
+    const text = document.getElementById('manualListInput').value.trim().toUpperCase();
+    if (!text) {
+      alert('Please paste at least one barcode code in the text box.');
+      return;
+    }
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    lines.forEach(line => {
+      const parts = line.split(/[,\t]/).map(s => s.trim().toUpperCase());
+      const code = parts[0] || '';
+      const title = parts.length > 1 ? parts[1] : code;
+      const subtitle = parts.length > 2 ? parts[2] : '';
+      if (code) {
+        generatedItems.push({ code, title, subtitle });
+      }
+    });
+  } else if (activeTab === 'csv') {
+    if (!csvParsedRows || !csvParsedRows.length) {
+      alert('Please upload a valid CSV file first.');
+      return;
+    }
+    const codeIdx = parseInt(document.getElementById('csvCodeCol').value) || 0;
+    const titleIdx = parseInt(document.getElementById('csvTitleCol').value);
+
+    csvParsedRows.forEach(row => {
+      const code = row[codeIdx] ? String(row[codeIdx]).trim().toUpperCase() : '';
+      if (code) {
+        const title = (titleIdx >= 0 && row[titleIdx]) ? String(row[titleIdx]).trim().toUpperCase() : code;
+        generatedItems.push({ code, title, subtitle: '' });
+      }
+    });
+  }
+
+  currentSelectedIndex = 0;
+  gridCurrentPage = 0;
+  updateStats();
+  renderPreview();
+}
+
+/* ================= CSV PARSER ================= */
+let csvParsedRows = [];
+function handleCSVUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    const content = evt.target.result;
+    const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 1) {
+      document.getElementById('csvStatus').textContent = 'CSV is empty.';
+      return;
+    }
+
+    csvParsedRows = lines.map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, '').toUpperCase()));
+    const headers = csvParsedRows[0];
+    
+    const codeSelect = document.getElementById('csvCodeCol');
+    const titleSelect = document.getElementById('csvTitleCol');
+    codeSelect.innerHTML = '';
+    titleSelect.innerHTML = '<option value="-1">Same as Code</option>';
+
+    headers.forEach((h, i) => {
+      const opt1 = document.createElement('option');
+      opt1.value = i;
+      opt1.textContent = `${h} (Col ${i+1})`;
+      codeSelect.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = i;
+      opt2.textContent = `${h} (Col ${i+1})`;
+      titleSelect.appendChild(opt2);
+    });
+
+    document.getElementById('csvStatus').textContent = `Loaded ${csvParsedRows.length - 1} rows from ${file.name}`;
+    csvParsedRows = csvParsedRows.slice(1);
+    generateData();
+  };
+  reader.readAsText(file);
+}
+
+/* ================= DIMENSION & SIZING CALCULATOR ================= */
+function handleSizePresetChange() {
+  const presetKey = document.getElementById('sizePresetSelect').value;
+  const customBox = document.getElementById('customDimsBox');
+
+  if (presetKey === 'custom') {
+    customBox.style.display = 'block';
+    updateDimensions();
+    return;
+  }
+
+  customBox.style.display = 'none';
+  const p = SIZE_PRESETS[presetKey];
+  if (!p) return;
+
+  document.getElementById('dimWidth').value = p.w;
+  document.getElementById('dimHeight').value = p.h;
+  document.getElementById('dimUnit').value = p.unit;
+  document.getElementById('gridCols').value = p.cols;
+  document.getElementById('labelOrientation').value = p.orient;
+
+  calculateDimensions(p.w, p.h, p.unit, p.isSheet);
+  handleRollMediaChange();
+  updateStats();
+  renderPreview();
+}
+
+function updateDimensions() {
+  const w = parseFloat(document.getElementById('dimWidth').value) || 6;
+  const h = parseFloat(document.getElementById('dimHeight').value) || 3;
+  const unit = document.getElementById('dimUnit').value;
+  calculateDimensions(w, h, unit, false);
+  handleRollMediaChange();
+  updateStats();
+  renderPreview();
+}
+
+function calculateDimensions(rawW, rawH, unit, isSheet) {
+  let widthIn = rawW;
+  let heightIn = rawH;
+
+  if (unit === 'mm') {
+    widthIn = rawW / 25.4;
+    heightIn = rawH / 25.4;
+  } else if (unit === 'cm') {
+    widthIn = rawW / 2.54;
+    heightIn = rawH / 2.54;
+  } else if (unit === 'px') {
+    widthIn = rawW / 96.0;
+    heightIn = rawH / 96.0;
+  }
+
+  currentDimensions = {
+    widthIn,
+    heightIn,
+    unit,
+    widthRaw: rawW,
+    heightRaw: rawH,
+    isSheet
+  };
+}
+
+function toggleOrientation() {
+  const orient = document.getElementById('labelOrientation').value;
+  const w = parseFloat(document.getElementById('dimWidth').value) || 6;
+  const h = parseFloat(document.getElementById('dimHeight').value) || 3;
+
+  if ((orient === 'landscape' && w < h) || (orient === 'portrait' && w > h)) {
+    document.getElementById('dimWidth').value = h;
+    document.getElementById('dimHeight').value = w;
+    updateDimensions();
+  }
+}
+
+function updateStats() {
+  const count = generatedItems.length;
+  document.getElementById('statCount').textContent = count;
+  
+  const unit = currentDimensions.unit;
+  const wRaw = currentDimensions.widthRaw;
+  const hRaw = currentDimensions.heightRaw;
+  document.getElementById('statSize').textContent = `${wRaw} × ${hRaw} ${unit}`;
+
+  const cols = parseInt(document.getElementById('gridCols').value) || 4;
+  const rowsPerPage = 5;
+  const itemsPerPage = cols * rowsPerPage;
+  const estPages = Math.max(1, Math.ceil(count / itemsPerPage));
+  document.getElementById('statPages').textContent = estPages;
+}
+
+/* ================= SINGLE LABEL INSPECTOR NAVIGATION ================= */
+function prevSingleLabel() {
+  if (generatedItems.length === 0) return;
+  currentSelectedIndex = (currentSelectedIndex - 1 + generatedItems.length) % generatedItems.length;
+  renderPreview();
+}
+
+function nextSingleLabel() {
+  if (generatedItems.length === 0) return;
+  currentSelectedIndex = (currentSelectedIndex + 1) % generatedItems.length;
+  renderPreview();
+}
+
+function selectLabelIndex(idx) {
+  currentSelectedIndex = idx;
+  renderPreview();
+}
+
+/* ================= BATCH GRID SHEET NAVIGATION ================= */
+function prevGridPage() {
+  if (gridCurrentPage > 0) {
+    gridCurrentPage--;
+    renderPreview();
+  }
+}
+
+function nextGridPage() {
+  const cols = parseInt(document.getElementById('gridCols').value) || 6;
+  const itemsPerPage = Math.max(1, cols * 4);
+  const totalGridPages = Math.ceil(generatedItems.length / itemsPerPage);
+  if (gridCurrentPage < totalGridPages - 1) {
+    gridCurrentPage++;
+    renderPreview();
+  }
+}
+
+/* ================= MAIN RENDER PREVIEW (INSPECTOR + GRID) ================= */
+function renderPreview() {
+  const format = document.getElementById('barcodeFormat').value;
+  const textPos = document.getElementById('textPosition').value;
+  const fontFamily = document.getElementById('fontFamily').value;
+  const fontWeight = document.getElementById('fontWeight').value;
+  const fontSize = parseInt(document.getElementById('fontSize').value) || 22;
+  const letterSpacing = parseFloat(document.getElementById('letterSpacing').value) || 1;
+  const slashedZero = document.getElementById('enableSlashedZero').checked;
+  const borderStyle = document.getElementById('borderStyle').value;
+  const padding = parseInt(document.getElementById('labelPadding').value) || 12;
+  const textColor = document.getElementById('textColor').value;
+  const barColor = document.getElementById('barColor').value;
+  const bgColor = document.getElementById('bgColor').value;
+  const cols = parseInt(document.getElementById('gridCols').value) || 6;
+  
+  const widthRatio = parseInt(document.getElementById('barcodeWidthRatio').value) || 90;
+  const heightRatio = parseInt(document.getElementById('barcodeHeightRatio').value) || 65;
+
+  let borderClass = 'bordered';
+  if (borderStyle === 'solid-dark') borderClass = 'bordered-dark';
+  else if (borderStyle === 'dashed') borderClass = 'bordered-dashed';
+  else if (borderStyle === 'none') borderClass = '';
+
+  const slashedStyle = slashedZero ? 'font-variant-numeric: slashed-zero; font-feature-settings: "zero" 1;' : '';
+
+  if (!generatedItems.length) {
+    document.getElementById('singleLabelFrame').innerHTML = '<div style="padding:40px; color:#888;">No barcode data.</div>';
+    document.getElementById('barcodeGrid').innerHTML = '<div style="padding:40px; color:#888;">No barcodes generated yet.</div>';
+    return;
+  }
+
+  // 1. RENDER SINGLE LABEL INSPECTOR (1:1 PHYSICAL PROPORTIONS)
+  const safeIdx = Math.min(currentSelectedIndex, generatedItems.length - 1);
+  const singleItem = generatedItems[safeIdx];
+  const singleFrame = document.getElementById('singleLabelFrame');
+
+  const widthIn = currentDimensions.widthIn;
+  const heightIn = currentDimensions.heightIn;
+  const widthMm = (widthIn * 25.4).toFixed(1);
+  const heightMm = (heightIn * 25.4).toFixed(1);
+
+  document.getElementById('singleDimTag').textContent = `${currentDimensions.widthRaw} × ${currentDimensions.heightRaw} ${currentDimensions.unit} (${widthMm} × ${heightMm} mm)`;
+  document.getElementById('dimensionMarkerTop').textContent = `← ${currentDimensions.widthRaw} ${currentDimensions.unit} (${widthMm} mm) →`;
+  document.getElementById('singleNavText').textContent = `Label ${safeIdx + 1} of ${generatedItems.length}: ${singleItem.code}`;
+
+  // Scale frame to maximum 500px width and max 260px height preserving aspect ratio
+  const maxInspectorW = 500;
+  const maxInspectorH = 260;
+  let inspectorW = maxInspectorW;
+  let inspectorH = inspectorW * (heightIn / widthIn);
+  if (inspectorH > maxInspectorH) {
+    inspectorH = maxInspectorH;
+    inspectorW = inspectorH * (widthIn / heightIn);
+  }
+
+  singleFrame.className = `single-label-frame ${borderClass}`;
+  singleFrame.style.width = `${Math.round(inspectorW)}px`;
+  singleFrame.style.height = `${Math.round(inspectorH)}px`;
+  singleFrame.style.padding = `${padding}px`;
+  singleFrame.style.backgroundColor = bgColor;
+
+  // Calculate proportional vertical heights
+  const hasTopText = (textPos === 'top' || textPos === 'both');
+  const hasBottomText = (textPos === 'bottom' || textPos === 'both');
+  const textSpaceEstimate = (hasTopText ? 30 : 0) + (hasBottomText ? 30 : 0);
+  const availableContentH = Math.max(40, inspectorH - textSpaceEstimate - (padding * 2));
+  const singleBcHeight = Math.round(availableContentH * (heightRatio / 100));
+
+  singleFrame.innerHTML = `
+    ${hasTopText ? `
+      <div class="barcode-text-top" style="font-family:'${fontFamily}', 'Inter', sans-serif; font-weight:${fontWeight}; font-size:${fontSize}px; letter-spacing:${letterSpacing}px; color:${textColor}; ${slashedStyle}">
+        ${escapeHtml(singleItem.title.toUpperCase())}
+      </div>
+    ` : ''}
+
+    <div class="barcode-svg-wrap" style="height: ${singleBcHeight}px; width: ${format === 'QR' ? `${singleBcHeight}px` : `${widthRatio}%`}; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+      ${format === 'QR' ? `<div id="single-qr-target" style="width:${singleBcHeight}px; height:${singleBcHeight}px;"></div>` : `<svg id="single-bc-svg" style="width:100%; height:100%; display:block;"></svg>`}
+    </div>
+
+    ${hasBottomText ? `
+      <div class="barcode-text-bottom" style="font-family:'${fontFamily}', 'Inter', sans-serif; font-size:${Math.max(10, fontSize - 4)}px; letter-spacing:${letterSpacing}px; color:${textColor}; ${slashedStyle}">
+        ${escapeHtml(singleItem.title.toUpperCase())}
+      </div>
+    ` : ''}
+  `;
+
+  // Render for Single Inspector (Stretching barcode width & height to fill the widthRatio container)
+  if (format === 'QR') {
+    const qrEl = document.getElementById('single-qr-target');
+    if (qrEl) {
+      new QRCode(qrEl, {
+        text: singleItem.code.toUpperCase(),
+        width: singleBcHeight,
+        height: singleBcHeight,
+        colorDark: barColor,
+        colorLight: bgColor,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+  } else {
+    const svgEl = document.getElementById('single-bc-svg');
+    if (svgEl) {
+      try {
+        JsBarcode(svgEl, singleItem.code.toUpperCase(), {
+          format: format,
+          displayValue: false,
+          lineColor: barColor,
+          background: 'transparent',
+          margin: 0,
+          width: 2,
+          height: 100
+        });
+        
+        const rawW = parseFloat(svgEl.getAttribute('width')) || 200;
+        const rawH = parseFloat(svgEl.getAttribute('height')) || 100;
+        svgEl.setAttribute('viewBox', `0 0 ${rawW} ${rawH}`);
+        svgEl.setAttribute('preserveAspectRatio', 'none');
+        svgEl.removeAttribute('width');
+        svgEl.removeAttribute('height');
+        svgEl.style.width = '100%';
+        svgEl.style.height = '100%';
+        svgEl.style.display = 'block';
+      } catch (err) {
+        svgEl.outerHTML = `<div style="color:red; font-size:11px;">Invalid ${format} code: ${singleItem.code}</div>`;
+      }
+    }
+  }
+
+  // 2. RENDER BATCH GRID (OPTIMIZED: 4 ROWS PER SHEET PREVIEW FOR INSTANT SPEED)
+  const gridContainer = document.getElementById('barcodeGrid');
+  gridContainer.style.backgroundColor = bgColor;
+  gridContainer.style.gridTemplateColumns = `repeat(${cols}, minmax(135px, 1fr))`;
+  gridContainer.style.width = (cols >= 6) ? `${cols * 145}px` : '100%';
+
+  const maxPreviewRows = 4; // Exactly 4 rows per view for lightning speed
+  const itemsPerPage = Math.max(1, cols * maxPreviewRows);
+  const totalGridPages = Math.max(1, Math.ceil(generatedItems.length / itemsPerPage));
+  
+  if (gridCurrentPage >= totalGridPages) {
+    gridCurrentPage = totalGridPages - 1;
+  }
+  if (gridCurrentPage < 0) gridCurrentPage = 0;
+
+  const startIndex = gridCurrentPage * itemsPerPage;
+  const displayItems = generatedItems.slice(startIndex, startIndex + itemsPerPage);
+
+  const startLabelNum = generatedItems.length > 0 ? startIndex + 1 : 0;
+  const endLabelNum = startIndex + displayItems.length;
+
+  const previewMetaEl = document.getElementById('previewMeta');
+  if (previewMetaEl) {
+    previewMetaEl.textContent = `Displaying ${startLabelNum}–${endLabelNum} of ${generatedItems.length} labels (${Math.ceil(displayItems.length / cols)} Rows) • All ${generatedItems.length} labels included in Master PDF / ZIP`;
+  }
+
+  const gridPageTextEl = document.getElementById('gridPageText');
+  if (gridPageTextEl) {
+    gridPageTextEl.textContent = `Page ${gridCurrentPage + 1} of ${totalGridPages}`;
+  }
+
+  const gridItemHeight = Math.max(90, Math.round(150 * (heightIn / widthIn)));
+  const gridBcHeight = Math.max(30, Math.round((gridItemHeight - textSpaceEstimate) * (heightRatio / 100) * 0.8));
+
+  gridContainer.innerHTML = displayItems.map((item, relIdx) => {
+    const globalIdx = startIndex + relIdx;
+    const isSelected = globalIdx === safeIdx ? 'selected-item' : '';
+    return `
+      <div class="barcode-item ${borderClass} ${isSelected}" id="bc-item-${globalIdx}" onclick="selectLabelIndex(${globalIdx})" style="padding: ${Math.round(padding*0.6)}px; background-color: ${bgColor}; min-height: ${gridItemHeight}px;">
+        <div class="item-actions">
+          <button class="mini-icon-btn" title="Download Single PNG" onclick="event.stopPropagation(); downloadSingle('${item.code}', ${globalIdx}, 'png')">PNG</button>
+          <button class="mini-icon-btn" title="Download Single SVG" onclick="event.stopPropagation(); downloadSingle('${item.code}', ${globalIdx}, 'svg')">SVG</button>
+        </div>
+
+        ${hasTopText ? `
+          <div class="barcode-text-top" style="font-family:'${fontFamily}', 'Inter', sans-serif; font-weight:${fontWeight}; font-size:${Math.max(11, fontSize - 6)}px; letter-spacing:${letterSpacing}px; color:${textColor}; ${slashedStyle}">
+            ${escapeHtml(item.title.toUpperCase())}
+          </div>
+        ` : ''}
+
+        <div class="barcode-svg-wrap" style="height: ${gridBcHeight}px; width: ${format === 'QR' ? `${gridBcHeight}px` : `${widthRatio}%`}; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+          ${format === 'QR' ? `<div id="qr-target-${globalIdx}"></div>` : `<svg id="bc-svg-${globalIdx}" style="width:100%; height:100%; display:block;"></svg>`}
+        </div>
+
+        ${hasBottomText ? `
+          <div class="barcode-text-bottom" style="font-family:'${fontFamily}', 'Inter', sans-serif; font-size:${Math.max(9, fontSize - 10)}px; letter-spacing:${letterSpacing}px; color:${textColor}; ${slashedStyle}">
+            ${escapeHtml(item.title.toUpperCase())}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  displayItems.forEach((item, relIdx) => {
+    const globalIdx = startIndex + relIdx;
+    if (format === 'QR') {
+      const qrEl = document.getElementById(`qr-target-${globalIdx}`);
+      if (qrEl) {
+        new QRCode(qrEl, {
+          text: item.code.toUpperCase(),
+          width: gridBcHeight,
+          height: gridBcHeight,
+          colorDark: barColor,
+          colorLight: bgColor,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    } else {
+      const svgEl = document.getElementById(`bc-svg-${globalIdx}`);
+      if (svgEl) {
+        try {
+          JsBarcode(svgEl, item.code.toUpperCase(), {
+            format: format,
+            displayValue: false,
+            lineColor: barColor,
+            background: 'transparent',
+            margin: 0,
+            width: 2,
+            height: 100
+          });
+          const gW = parseFloat(svgEl.getAttribute('width')) || 200;
+          const gH = parseFloat(svgEl.getAttribute('height')) || 100;
+          svgEl.setAttribute('viewBox', `0 0 ${gW} ${gH}`);
+          svgEl.setAttribute('preserveAspectRatio', 'none');
+          svgEl.removeAttribute('width');
+          svgEl.removeAttribute('height');
+          svgEl.style.width = '100%';
+          svgEl.style.height = '100%';
+          svgEl.style.display = 'block';
+        } catch (err) {
+          svgEl.outerHTML = `<div style="color:red; font-size:10px;">Invalid code</div>`;
+        }
+      }
+    }
+  });
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ================= HIGH-DPI CANVAS RENDERER (IDENTICAL TO SCREEN PREVIEW) ================= */
+function renderLabelToCanvas(item, dims, dpi) {
+  const { widthIn, heightIn } = dims;
+  const widthPx = Math.round(widthIn * dpi);
+  const heightPx = Math.round(heightIn * dpi);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = widthPx;
+  canvas.height = heightPx;
+  const ctx = canvas.getContext('2d');
+
+  const format = document.getElementById('barcodeFormat').value;
+  const textPos = document.getElementById('textPosition').value;
+  const fontFamily = document.getElementById('fontFamily').value;
+  const fontWeight = document.getElementById('fontWeight').value;
+  const fontSizeBase = parseInt(document.getElementById('fontSize').value) || 22;
+  const borderStyle = document.getElementById('borderStyle').value;
+  const textColor = document.getElementById('textColor').value;
+  const barColor = document.getElementById('barColor').value;
+  const bgColor = document.getElementById('bgColor').value;
+  
+  const widthRatioPct = (parseInt(document.getElementById('barcodeWidthRatio').value) || 90) / 100;
+  const heightRatioPct = (parseInt(document.getElementById('barcodeHeightRatio').value) || 65) / 100;
+
+  // 1. Background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, widthPx, heightPx);
+
+  // 2. Border
+  if (borderStyle !== 'none') {
+    ctx.lineWidth = Math.max(1, Math.round(dpi / 150));
+    ctx.strokeStyle = (borderStyle === 'solid-dark') ? '#000000' : '#D0D5DD';
+    if (borderStyle === 'dashed') ctx.setLineDash([Math.round(dpi/30), Math.round(dpi/30)]);
+    ctx.strokeRect(0, 0, widthPx, heightPx);
+    ctx.setLineDash([]);
+  }
+
+  // 3. Proportional Vertical Centering Calculations
+  const scaleFactor = dpi / 96;
+  const scaledFontSize = Math.round(fontSizeBase * scaleFactor);
+  const hasTopText = (textPos === 'top' || textPos === 'both');
+  const hasBottomText = (textPos === 'bottom' || textPos === 'both');
+  
+  const textHeightUnit = Math.round(scaledFontSize * 1.25);
+  const gap = Math.round(scaledFontSize * 0.35);
+
+  let totalTextH = 0;
+  if (hasTopText) totalTextH += textHeightUnit + gap;
+  if (hasBottomText) totalTextH += textHeightUnit + gap;
+
+  const barcodeMaxWidth = Math.round(widthPx * widthRatioPct);
+  const maxAllowedBarcodeH = heightPx - totalTextH - Math.round(heightPx * 0.10);
+  const barcodeMaxHeight = Math.max(Math.round(heightPx * 0.30), Math.min(maxAllowedBarcodeH, Math.round(heightPx * heightRatioPct)));
+
+  const totalBlockH = totalTextH + barcodeMaxHeight;
+  let curY = Math.max(Math.round(heightPx * 0.04), Math.round((heightPx - totalBlockH) / 2));
+
+  // 4. Render Top Text
+  if (hasTopText) {
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `${fontWeight} ${scaledFontSize}px "${fontFamily}", "Inter", Arial, sans-serif`;
+    ctx.fillText(item.title.toUpperCase(), widthPx / 2, curY);
+    curY += textHeightUnit + gap;
+  }
+
+  // 5. Render Barcode Centered Vertically & Horizontally
+  if (format === 'QR') {
+    const tempDiv = document.createElement('div');
+    const qrSize = Math.min(barcodeMaxWidth, barcodeMaxHeight);
+    new QRCode(tempDiv, {
+      text: item.code.toUpperCase(),
+      width: qrSize,
+      height: qrSize,
+      colorDark: barColor,
+      colorLight: bgColor
+    });
+    const qrImg = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
+    if (qrImg) {
+      const qx = Math.round((widthPx - qrSize) / 2);
+      ctx.drawImage(qrImg, qx, curY, qrSize, qrSize);
+      curY += qrSize + gap;
+    }
+  } else {
+    const offCanvas = document.createElement('canvas');
+    try {
+      JsBarcode(offCanvas, item.code.toUpperCase(), {
+        format: format,
+        displayValue: false,
+        lineColor: barColor,
+        background: bgColor,
+        margin: 0,
+        width: Math.max(2, Math.round(scaleFactor * 2.2)),
+        height: 200
+      });
+
+      if (offCanvas.width > 0) {
+        const drawW = barcodeMaxWidth;
+        const drawH = barcodeMaxHeight;
+        const bx = Math.round((widthPx - drawW) / 2);
+        ctx.drawImage(offCanvas, bx, curY, drawW, drawH);
+        curY += drawH + gap;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // 6. Render Bottom Text
+  if (hasBottomText) {
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `600 ${Math.round(scaledFontSize * 0.85)}px "${fontFamily}", "Inter", Arial, sans-serif`;
+    ctx.fillText(item.title.toUpperCase(), widthPx / 2, curY);
+  }
+
+  return canvas;
+}
+
+/* ================= EXPORT: CURRENT SINGLE ITEM ACTIONS ================= */
+function downloadCurrentSingle(type) {
+  if (!generatedItems.length) return;
+  const safeIdx = Math.min(currentSelectedIndex, generatedItems.length - 1);
+  const item = generatedItems[safeIdx];
+  downloadSingle(item.code, safeIdx, type);
+}
+
+function printSingleLabel() {
+  if (!generatedItems.length) return;
+  const safeIdx = Math.min(currentSelectedIndex, generatedItems.length - 1);
+  const item = generatedItems[safeIdx];
+  
+  const printWindow = window.open('', '_blank');
+  const canvas = renderLabelToCanvas(item, currentDimensions, 300);
+  const imgUrl = canvas.toDataURL('image/png');
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Print Label - ${item.code}</title>
+      <style>
+        @page { size: ${currentDimensions.widthIn}in ${currentDimensions.heightIn}in; margin: 0; }
+        body { margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; }
+        img { width: 100%; height: 100%; object-fit: contain; }
+      </style>
+    </head>
+    <body onload="window.print(); window.close();">
+      <img src="${imgUrl}">
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+/* ================= FULL VECTOR SVG LABEL GENERATOR ================= */
+function renderLabelToSVG(item, dims) {
+  const { widthIn, heightIn } = dims;
+  const wPx = Math.round(widthIn * 96); // 96 units per inch
+  const hPx = Math.round(heightIn * 96);
+
+  const format = document.getElementById('barcodeFormat').value;
+  const textPos = document.getElementById('textPosition').value;
+  const fontFamily = document.getElementById('fontFamily').value;
+  const fontWeight = document.getElementById('fontWeight').value;
+  const fontSizeBase = parseInt(document.getElementById('fontSize').value) || 22;
+  const letterSpacing = parseFloat(document.getElementById('letterSpacing').value) || 1;
+  const borderStyle = document.getElementById('borderStyle').value;
+  const textColor = document.getElementById('textColor').value;
+  const barColor = document.getElementById('barColor').value;
+  const bgColor = document.getElementById('bgColor').value;
+  
+  const widthRatioPct = (parseInt(document.getElementById('barcodeWidthRatio').value) || 90) / 100;
+  const heightRatioPct = (parseInt(document.getElementById('barcodeHeightRatio').value) || 65) / 100;
+
+  const hasTopText = (textPos === 'top' || textPos === 'both');
+  const hasBottomText = (textPos === 'bottom' || textPos === 'both');
+  
+  const textHeightUnit = Math.round(fontSizeBase * 1.25);
+  const gap = Math.round(fontSizeBase * 0.35);
+
+  let totalTextH = 0;
+  if (hasTopText) totalTextH += textHeightUnit + gap;
+  if (hasBottomText) totalTextH += textHeightUnit + gap;
+
+  const barcodeMaxWidth = Math.round(wPx * widthRatioPct);
+  const maxAllowedBarcodeH = hPx - totalTextH - Math.round(hPx * 0.10);
+  const barcodeMaxHeight = Math.max(Math.round(hPx * 0.30), Math.min(maxAllowedBarcodeH, Math.round(hPx * heightRatioPct)));
+
+  const totalBlockH = totalTextH + barcodeMaxHeight;
+  let curY = Math.max(Math.round(hPx * 0.04), Math.round((hPx - totalBlockH) / 2));
+
+  let borderSvg = '';
+  if (borderStyle !== 'none') {
+    const strokeColor = (borderStyle === 'solid-dark') ? '#000000' : '#D0D5DD';
+    const dashAttr = (borderStyle === 'dashed') ? 'stroke-dasharray="4,4"' : '';
+    borderSvg = `<rect x="0.5" y="0.5" width="${wPx - 1}" height="${hPx - 1}" fill="none" stroke="${strokeColor}" stroke-width="1" ${dashAttr}/>`;
+  }
+
+  let topTextSvg = '';
+  if (hasTopText) {
+    topTextSvg = `<text x="${wPx / 2}" y="${curY + fontSizeBase}" text-anchor="middle" font-family="${fontFamily}, 'Inter', Arial, sans-serif" font-weight="${fontWeight}" font-size="${fontSizeBase}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${escapeHtml(item.title.toUpperCase())}</text>`;
+    curY += textHeightUnit + gap;
+  }
+
+  let barcodeSvgContent = '';
+  if (format !== 'QR') {
+    const tempSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(tempSvg, item.code.toUpperCase(), {
+      format: format,
+      displayValue: false,
+      lineColor: barColor,
+      background: 'transparent',
+      margin: 0,
+      width: 2,
+      height: 100
+    });
+    const genW = parseFloat(tempSvg.getAttribute('width')) || 200;
+    const genH = parseFloat(tempSvg.getAttribute('height')) || 100;
+    const bx = Math.round((wPx - barcodeMaxWidth) / 2);
+    
+    barcodeSvgContent = `
+      <svg x="${bx}" y="${curY}" width="${barcodeMaxWidth}" height="${barcodeMaxHeight}" viewBox="0 0 ${genW} ${genH}" preserveAspectRatio="none">
+        ${tempSvg.innerHTML}
+      </svg>
+    `;
+    curY += barcodeMaxHeight + gap;
+  }
+
+  let bottomTextSvg = '';
+  if (hasBottomText) {
+    const bSize = Math.max(10, fontSizeBase - 4);
+    bottomTextSvg = `<text x="${wPx / 2}" y="${curY + bSize}" text-anchor="middle" font-family="${fontFamily}, 'Inter', Arial, sans-serif" font-weight="600" font-size="${bSize}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${escapeHtml(item.title.toUpperCase())}</text>`;
+  }
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${widthIn}in" height="${heightIn}in" viewBox="0 0 ${wPx} ${hPx}">
+  <rect width="100%" height="100%" fill="${bgColor}"/>
+  ${borderSvg}
+  ${topTextSvg}
+  ${barcodeSvgContent}
+  ${bottomTextSvg}
+</svg>`;
+}
+
+async function downloadSingle(code, idx, type) {
+  const item = generatedItems[idx] || { code: code.toUpperCase(), title: code.toUpperCase() };
+  const dpi = parseInt(document.getElementById('exportDpi').value) || 300;
+
+  if (type === 'svg') {
+    try {
+      const svgStr = renderLabelToSVG(item, currentDimensions);
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      downloadBlob(blob, `${sanitizeName(code.toUpperCase())}.svg`);
+    } catch(e) {
+      alert(`Could not export SVG: ${e.message}`);
+    }
+  } else {
+    const canvas = renderLabelToCanvas(item, currentDimensions, dpi);
+    canvas.toBlob((blob) => {
+      downloadBlob(blob, `${sanitizeName(code.toUpperCase())}.png`);
+    }, 'image/png');
+  }
+}
+
+/* ================= EXPORT: ZIP BATCHES ================= */
+async function downloadAllZIP(formatType) {
+  if (isGeneratingZip) return;
+  if (!generatedItems.length) {
+    alert('No barcodes to export. Generate data first.');
+    return;
+  }
+
+  const dpi = parseInt(document.getElementById('exportDpi').value) || 300;
+  const batchSize = parseInt(document.getElementById('zipBatchSize').value) || 500;
+  const totalBatches = Math.ceil(generatedItems.length / batchSize);
+
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressNote = document.getElementById('progressNote');
+
+  isGeneratingZip = true;
+  progressWrap.style.display = 'block';
+
+  let processed = 0;
+
+  for (let b = 0; b < totalBatches; b++) {
+    const batchItems = generatedItems.slice(b * batchSize, (b + 1) * batchSize);
+    const zip = new JSZip();
+    const folder = zip.folder(`barcodes_${formatType}`);
+
+    for (let i = 0; i < batchItems.length; i++) {
+      const item = batchItems[i];
+      const safeName = sanitizeName(item.code.toUpperCase() || `barcode_${b}_${i}`);
+
+      if (formatType === 'svg') {
+        try {
+          const svgStr = renderLabelToSVG(item, currentDimensions);
+          folder.file(`${safeName}.svg`, svgStr);
+        } catch(e) {
+          folder.file(`${safeName}.txt`, `Error: ${e.message}`);
+        }
+      } else {
+        const canvas = renderLabelToCanvas(item, currentDimensions, dpi);
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        folder.file(`${safeName}.png`, blob);
+      }
+
+      processed++;
+      const pct = Math.round((processed / generatedItems.length) * 100);
+      progressBar.style.width = pct + '%';
+      progressNote.textContent = `Batch ${b+1}/${totalBatches} — Rendering ${processed}/${generatedItems.length} (${pct}%)`;
+
+      if (i % 20 === 0) await yieldFrame();
+    }
+
+    progressNote.textContent = `Zipping batch ${b+1} of ${totalBatches}...`;
+    await yieldFrame();
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(zipBlob, `barcodes_${currentDimensions.widthRaw}x${currentDimensions.heightRaw}_part${b+1}_of_${totalBatches}.zip`);
+    await yieldFrame();
+  }
+
+  progressNote.textContent = `Completed! ${processed} barcodes successfully exported across ${totalBatches} ZIP file(s).`;
+  isGeneratingZip = false;
+}
+
+/* ================= PDF MODE & ROLL MEDIA PRESET HANDLERS ================= */
+function togglePdfMode() {
+  const mode = document.getElementById('pdfMode').value;
+  const settings = document.getElementById('masterRollSettings');
+  if (settings) {
+    settings.style.display = (mode === 'master-roll') ? 'block' : 'none';
+  }
+}
+
+function handleRollMediaChange() {
+  const preset = document.getElementById('rollMediaPreset').value;
+  const colInput = document.getElementById('pdfColumns');
+  const labelWidth = currentDimensions.widthIn || 6;
+
+  if (preset === '3ft') {
+    // 36 inches width -> for 6" label = 6 cols
+    colInput.value = Math.max(1, Math.floor(36 / labelWidth)) || 6;
+  } else if (preset === '4ft') {
+    // 48 inches width -> for 6" label = 8 cols
+    colInput.value = Math.max(1, Math.floor(48 / labelWidth)) || 8;
+  } else if (preset === '2ft') {
+    // 24 inches width -> for 6" label = 4 cols
+    colInput.value = Math.max(1, Math.floor(24 / labelWidth)) || 4;
+  } else if (preset === 'sheet-a4') {
+    // A4 width ~8.27 in
+    colInput.value = Math.max(1, Math.floor(8.27 / labelWidth)) || 1;
+  } else if (preset === 'sheet-a3') {
+    // A3 width ~11.69 in
+    colInput.value = Math.max(1, Math.floor(11.69 / labelWidth)) || 2;
+  }
+  syncPdfColumns();
+}
+
+function syncPdfColumns() {
+  const cols = parseInt(document.getElementById('pdfColumns').value) || 6;
+  const gridColsInput = document.getElementById('gridCols');
+  if (gridColsInput && parseInt(gridColsInput.value) !== cols) {
+    gridColsInput.value = cols;
+  }
+  renderPreview();
+}
+
+/* ================= EXPORT: MASTER ROLL & VECTOR PDF ================= */
+async function exportPDF() {
+  if (!generatedItems.length) {
+    alert('No barcodes to export. Generate data first.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdfMode = document.getElementById('pdfMode').value;
+  const dpi = parseInt(document.getElementById('exportDpi').value) || 300;
+  const total = generatedItems.length;
+
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressNote = document.getElementById('progressNote');
+  progressWrap.style.display = 'block';
+
+  // -------------------------------------------------------------
+  // MODE 1: MASTER GANG SHEET / ROLL PDF (MULTI-COLUMN FOR PRESS)
+  // -------------------------------------------------------------
+  if (pdfMode === 'master-roll') {
+    const cols = Math.max(1, parseInt(document.getElementById('pdfColumns').value) || 6);
+    const gapIn = parseFloat(document.getElementById('labelGap').value) || 0;
+    const pageFormat = document.getElementById('rollPageFormat').value;
+
+    const labelW = currentDimensions.widthIn;
+    const labelH = currentDimensions.heightIn;
+
+    const totalRows = Math.ceil(total / cols);
+
+    let rowsPerPage = totalRows;
+    if (pageFormat === 'paginated-5') rowsPerPage = 5;
+    else if (pageFormat === 'paginated-10') rowsPerPage = 10;
+    else if (pageFormat === 'paginated-20') rowsPerPage = 20;
+
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    const sheetWidthIn = Number((cols * labelW + (cols - 1) * gapIn).toFixed(4));
+
+    let pdf = null;
+    let renderedCount = 0;
+
+    for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+      const startRow = pageIdx * rowsPerPage;
+      const rowsInThisPage = Math.min(rowsPerPage, totalRows - startRow);
+      const pageHeightIn = Number((rowsInThisPage * labelH + (rowsInThisPage - 1) * gapIn).toFixed(4));
+      const orientation = sheetWidthIn >= pageHeightIn ? 'l' : 'p';
+
+      if (pageIdx === 0) {
+        pdf = new jsPDF({
+          orientation: orientation,
+          unit: 'in',
+          format: [sheetWidthIn, pageHeightIn]
+        });
+      } else {
+        pdf.addPage([sheetWidthIn, pageHeightIn], orientation);
+      }
+
+      for (let r = 0; r < rowsInThisPage; r++) {
+        const globalRow = startRow + r;
+        for (let c = 0; c < cols; c++) {
+          const itemIdx = globalRow * cols + c;
+          if (itemIdx >= total) break;
+
+          const item = generatedItems[itemIdx];
+          const canvas = renderLabelToCanvas(item, currentDimensions, dpi);
+          const imgData = canvas.toDataURL('image/png');
+
+          const posX = c * (labelW + gapIn);
+          const posY = r * (labelH + gapIn);
+
+          pdf.addImage(imgData, 'PNG', posX, posY, labelW, labelH, undefined, 'FAST');
+
+          renderedCount++;
+          const pct = Math.round((renderedCount / total) * 100);
+          progressBar.style.width = pct + '%';
+          progressNote.textContent = `Master Sheet: Placing label ${renderedCount}/${total} (Col ${c + 1}/${cols}, Row ${globalRow + 1}/${totalRows})...`;
+
+          if (renderedCount % 6 === 0) await yieldFrame();
+        }
+      }
+    }
+
+    progressNote.textContent = 'Saving Master Roll PDF...';
+    await yieldFrame();
+    const mediaName = document.getElementById('rollMediaPreset').value;
+    pdf.save(`master_sheet_${mediaName}_${cols}cols_${currentDimensions.widthRaw}x${currentDimensions.heightRaw}_${total}_labels.pdf`);
+    progressNote.textContent = `Completed! Master Roll PDF (${cols} columns, ${sheetWidthIn}" roll width) successfully exported.`;
+  } 
+  // -------------------------------------------------------------
+  // MODE 2: 1-UP SINGLE LABEL ROLL PDF (1 PER PAGE FOR ZEBRA)
+  // -------------------------------------------------------------
+  else {
+    const orientation = currentDimensions.widthIn >= currentDimensions.heightIn ? 'l' : 'p';
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: 'in',
+      format: [currentDimensions.widthIn, currentDimensions.heightIn]
+    });
+
+    for (let i = 0; i < total; i++) {
+      if (i > 0) pdf.addPage([currentDimensions.widthIn, currentDimensions.heightIn], orientation);
+
+      const item = generatedItems[i];
+      const canvas = renderLabelToCanvas(item, currentDimensions, dpi);
+      const imgData = canvas.toDataURL('image/png');
+
+      pdf.addImage(imgData, 'PNG', 0, 0, currentDimensions.widthIn, currentDimensions.heightIn, undefined, 'FAST');
+
+      const pct = Math.round(((i + 1) / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressNote.textContent = `1-Up Thermal PDF: Building page ${i+1} of ${total}...`;
+
+      if (i % 10 === 0) await yieldFrame();
+    }
+
+    progressNote.textContent = 'Saving 1-Up PDF document...';
+    await yieldFrame();
+    pdf.save(`single_labels_1up_${currentDimensions.widthRaw}x${currentDimensions.heightRaw}_${total}_labels.pdf`);
+    progressNote.textContent = `Completed! ${total} individual pages exported in PDF.`;
+  }
+}
+
+/* ================= EXPORT: CSV DATA ================= */
+function downloadCSVData() {
+  if (!generatedItems.length) return;
+  const lines = ['Barcode,Title,Subtitle,Width,Height,Unit'];
+  generatedItems.forEach(item => {
+    lines.push(`"${item.code.toUpperCase()}","${item.title.toUpperCase()}","${item.subtitle}","${currentDimensions.widthRaw}","${currentDimensions.heightRaw}","${currentDimensions.unit}"`);
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  downloadBlob(blob, 'barcodes_data.csv');
+}
+
+/* ================= UTILITY FUNCTIONS ================= */
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function sanitizeName(str) {
+  return String(str).replace(/[^A-Za-z0-9\-_.]/g, '_').toUpperCase();
+}
+
+function yieldFrame() {
+  return new Promise(res => setTimeout(res, 0));
+}
+</script>
+</body>
+</html>

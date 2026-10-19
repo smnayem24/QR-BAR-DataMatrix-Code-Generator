@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataMatrix QR Code Generator (300 DPI)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
+:root {
+  --bg: #F4F6F8;
+  --panel: #FFFFFF;
+  --ink: #0F172A;
+  --ink-soft: #475569;
+  --ink-muted: #94A3B8;
+  --border: #CBD5E1;
+  --border-light: #E2E8F0;
+  --primary: #0284C7;
+  --primary-hover: #0369A1;
+  --safety: #F59E0B;
+  --safety-light: #FEF3C7;
+  --ok: #10B981;
+  --danger: #EF4444;
+  --mono: 'IBM Plex Mono', monospace;
+  --cond: 'Barlow Condensed', sans-serif;
+  --sans: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 24px 16px 80px;
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 4px solid var(--ink);
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.hero-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero h1 {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 36px;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.badge-300dpi {
+  background: var(--ink);
+  color: var(--safety);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--safety);
+}
+
+.hero .sub {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-top: 8px;
+  max-width: 650px;
+  line-height: 1.5;
+}
+
+.stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 18px;
+  min-width: 120px;
+  border-top: 4px solid var(--safety);
+  border-radius: 0 0 4px 4px;
+}
+
+.stat .n {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 24px;
+  display: block;
+  color: #FFFFFF;
+}
+
+.stat .l {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Grid Layout */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 24px;
+}
+
+@media (max-width: 992px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* Panels */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.panel h2 {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel h2 .tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--safety-light);
+  color: #B45309;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.panel .desc {
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* Form controls */
+.row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.field {
+  flex: 1;
+  min-width: 140px;
+}
+
+.field.small { max-width: 110px; }
+.field.medium { max-width: 180px; }
+.field.wide { min-width: 260px; flex: 2; }
+
+label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+input[type=text], input[type=number], select {
+  border: 1px solid var(--border);
+  background: #F8FAFC;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+input[type=text]:focus, input[type=number]:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.radio-group {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.radio-label input[type=radio] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+/* Drop Zone */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px 16px;
+  text-align: center;
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--primary);
+  background: #F0F9FF;
+}
+
+.dropzone-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+.dropzone-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dropzone-sub {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+/* Preset buttons */
+.preset-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.btn-chip {
+  background: #E2E8F0;
+  color: var(--ink);
+  border: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-chip:hover {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Buttons */
+button {
+  font-family: var(--cond);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background: #1E293B;
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: var(--primary);
+  color: #FFFFFF;
+}
+
+.btn-accent:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-safety {
+  background: var(--safety);
+  color: var(--ink);
+}
+
+.btn-safety:hover {
+  background: #D97706;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: #F1F5F9;
+  border-color: var(--ink);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Preview Column Sticky Box */
+.sticky-preview {
+  position: sticky;
+  top: 20px;
+}
+
+.preview-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.preview-title {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.preview-dims {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--primary);
+  background: #F0F9FF;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Canvas container */
+.canvas-wrapper {
+  background: #E2E8F0;
+  padding: 16px;
+  border-radius: 6px;
+  display: inline-block;
+  max-width: 100%;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.canvas-wrapper canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  background: #FFFFFF;
+}
+
+.preview-details {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: left;
+  background: #F8FAFC;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 14px;
+}
+
+.preview-details div {
+  margin-bottom: 4px;
+}
+.preview-details div:last-child { margin-bottom: 0; }
+
+/* Progress bar */
+.progress-wrap {
+  background: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.progress-track {
+  background: #E2E8F0;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--ok) 100%);
+  height: 100%;
+  width: 0%;
+  transition: width 0.15s linear;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* Table */
+.table-wrap {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: #F1F5F9;
+  font-family: var(--cond);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+  z-index: 1;
+}
+
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+tr:hover td {
+  background: #F0F9FF;
+}
+
+tr.selected td {
+  background: #E0F2FE;
+  font-weight: bold;
+}
+
+footer {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border-light);
+  padding-top: 20px;
+}
+
+/* Alert Note */
+.alert-note {
+  background: var(--safety-light);
+  border-left: 4px solid var(--safety);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #78350F;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- Hero Section -->
+  <div class="hero">
+    <div>
+      <div class="hero-title">
+        <h1>DataMatrix QR Code Generator</h1>
+        <span class="badge-300dpi">300 DPI &middot; 3" &times; 3.5"</span>
+      </div>
+      <div class="sub">
+        Generate high-resolution 300 DPI DataMatrix sticker labels with a <strong>5mm safety border</strong>. Batch-export thousands of labels cleanly into ZIP archives without freezing your PC.
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="n" id="statTotalRows">0</span>
+        <span class="l">Total Codes</span>
+      </div>
+      <div class="stat">
+        <span class="n" id="statSelectedRange">0</span>
+        <span class="l">Selected Range</span>
+      </div>
+      <div class="stat">
+        <span class="n" id="statZipBatches">0</span>
+        <span class="l">ZIP Batches</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid Layout -->
+  <div class="main-grid">
+    <!-- Left Controls Column -->
+    <div class="left-col">
+
+      <!-- Panel 1: Data Source -->
+      <div class="panel">
+        <h2>1 &middot; Data Source <span class="tag">EXCEL / CSV / SEQUENCE</span></h2>
+        <div class="desc">Upload your <code>PALLET_CODE.xlsx</code> file or generate a numeric sequence for testing.</div>
+
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="sourceType" value="file" checked onchange="toggleSourceType()">
+            Upload Excel / CSV File
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="sourceType" value="sequence" onchange="toggleSourceType()">
+            Auto-Generate Sequence (PALLET 1...N)
+          </label>
+        </div>
+
+        <!-- File Upload Area -->
+        <div id="fileSourceBox" style="margin-top: 14px;">
+          <div class="dropzone" id="dropZone" onclick="document.getElementById('excelFileInput').click()">
+            <div class="dropzone-icon">&boxbox;</div>
+            <div class="dropzone-text" id="uploadFileName">Click to select or drop PALLET_CODE.xlsx / CSV here</div>
+            <div class="dropzone-sub">Supports .xlsx, .xls, .csv files</div>
+          </div>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display:none" onchange="handleFileUpload(event)">
+
+          <div class="row" id="columnSelectRow" style="display:none; margin-top:14px;">
+            <div class="field wide">
+              <label>Select Target Code Column</label>
+              <select id="columnSelect" onchange="onColumnSelected()"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sequence Generator Area -->
+        <div id="sequenceSourceBox" style="display:none; margin-top:14px;">
+          <div class="row">
+            <div class="field wide">
+              <label>Code Prefix</label>
+              <input type="text" id="seqPrefix" value="PALLET ">
+            </div>
+            <div class="field small">
+              <label>Start #</label>
+              <input type="number" id="seqStart" value="1" min="1">
+            </div>
+            <div class="field small">
+              <label>End #</label>
+              <input type="number" id="seqEnd" value="1000" min="1">
+            </div>
+            <div class="field small">
+              <label>Pad Digits</label>
+              <input type="number" id="seqPad" value="0" min="0" max="8">
+            </div>
+          </div>
+          <button class="btn-ghost" style="width:100%" onclick="generateSequenceData()">Generate Sequence List</button>
+        </div>
+      </div>
+
+      <!-- Panel 2: Range & Performance Settings -->
+      <div class="panel">
+        <h2>2 &middot; Range &amp; Batch Control <span class="tag">PC CPU SAFEGUARD</span></h2>
+        <div class="desc">Specify the row range to process. Batch generation runs in chunks so your browser stays smooth and responsive.</div>
+
+        <div class="alert-note">
+          &starf; <strong>Memory Optimization:</strong> Generating all 12,000 labels at once is split into ZIP chunks of 500-1000 labels. Use the Range inputs below to process specific sections!
+        </div>
+
+        <div class="row">
+          <div class="field medium">
+            <label>Row From (1-indexed)</label>
+            <input type="number" id="rangeStartInput" value="1" min="1" onchange="updateRangeSelection()">
+          </div>
+          <div class="field medium">
+            <label>Row To</label>
+            <input type="number" id="rangeEndInput" value="500" min="1" onchange="updateRangeSelection()">
+          </div>
+          <div class="field medium">
+            <label>Batch Size (Labels/ZIP)</label>
+            <input type="number" id="batchSizeInput" value="500" min="50" max="2000" step="50" onchange="updateRangeSelection()">
+          </div>
+        </div>
+
+        <label>Quick Range Presets:</label>
+        <div class="preset-bar">
+          <button class="btn-chip" onclick="setRangePreset(1, 100)">1 - 100</button>
+          <button class="btn-chip" onclick="setRangePreset(1, 500)">1 - 500</button>
+          <button class="btn-chip" onclick="setRangePreset(501, 1000)">501 - 1000</button>
+          <button class="btn-chip" onclick="setRangePreset(1001, 2000)">1001 - 2000</button>
+          <button class="btn-chip" onclick="setRangePreset(1, 'all')">Select All Rows</button>
+        </div>
+      </div>
+
+      <!-- Panel 3: Sticker Dimensions & Border Customization -->
+      <div class="panel">
+        <h2>3 &middot; Sticker &amp; Border Specs <span class="tag">5MM CUT ZONE</span></h2>
+        <div class="desc">Set print dimensions and safety border (bleed zone). 5mm margin ensures cutting stickers won't slice into DataMatrix QR codes.</div>
+
+        <div class="row">
+          <div class="field small">
+            <label>Width (inch)</label>
+            <input type="number" id="widthInches" value="3.0" step="0.1" min="1" onchange="updateDimensions()">
+          </div>
+          <div class="field small">
+            <label>Height (inch)</label>
+            <input type="number" id="heightInches" value="3.5" step="0.1" min="1" onchange="updateDimensions()">
+          </div>
+          <div class="field small">
+            <label>DPI</label>
+            <input type="number" id="dpiSetting" value="300" min="72" max="600" step="50" onchange="updateDimensions()">
+          </div>
+          <div class="field small">
+            <label>Margin (mm)</label>
+            <input type="number" id="marginMm" value="5" min="0" max="20" step="1" onchange="updateDimensions()">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field medium">
+            <label>Text Position</label>
+            <select id="textPosSelect" onchange="renderPreview()">
+              <option value="top" selected>Top (Above DataMatrix)</option>
+              <option value="bottom">Bottom (Below DataMatrix)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-bottom:0;">
+          <div class="field wide">
+            <label class="radio-label" style="font-weight:normal; cursor:pointer;">
+              <input type="checkbox" id="showCutLineCheck" checked onchange="renderPreview()">
+              Draw 5mm Cut Line / Border Line (Trimming Guide)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 4: Loaded Code Data Table -->
+      <div class="panel">
+        <h2>4 &middot; Data Inspection <span class="tag" id="tableCountTag">0 ITEMS</span></h2>
+        <div class="desc">Click any row below to preview its 300 DPI DataMatrix sticker on the right panel.</div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px;">#</th>
+                <th>Pallet Code Value</th>
+                <th style="width:80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="codeTableBody">
+              <tr>
+                <td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">
+                  No dataset loaded. Upload an Excel file or click "Generate Sequence List".
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Sticky Column: Live Preview & Batch Export -->
+    <div class="right-col">
+      <div class="sticky-preview">
+        
+        <!-- Live Label Preview Card -->
+        <div class="preview-card">
+          <div class="preview-header">
+            <span class="preview-title">Sticker Live Preview</span>
+            <span class="preview-dims" id="dimBadge">900 &times; 1050 px (300 DPI)</span>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="previewCanvas" width="900" height="1050"></canvas>
+          </div>
+
+          <div class="preview-details">
+            <div><strong>Active Code:</strong> <span id="prevCodeVal" style="color:var(--primary); font-weight:700;">-</span></div>
+            <div><strong>Canvas Size:</strong> <span id="prevPixelDim">900 x 1050 px</span></div>
+            <div><strong>Safety Border:</strong> <span id="prevMarginPx">59 px (5.0 mm @ 300 DPI)</span></div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-ghost" style="flex:1;" onclick="downloadSinglePreview()">Download This PNG</button>
+          </div>
+        </div>
+
+        <!-- Export Action Card -->
+        <div class="panel" style="margin-top:20px; text-align:center;">
+          <h2>Generate &amp; Download</h2>
+          <div class="desc" id="exportEstimateText">
+            Ready to generate selected range into print-ready 300 DPI ZIP packages.
+          </div>
+
+          <button class="btn-accent" id="startExportBtn" style="width:100%; padding:14px;" onclick="startBatchExport()">
+            &blacktriangledown; Start Batch ZIP Export
+          </button>
+
+          <!-- Progress Bar -->
+          <div class="progress-wrap" id="progressWrap" style="display:none;">
+            <div class="progress-track">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-info">
+              <span id="progressStatusText">Rendering...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    DataMatrix QR Code Generator &middot; 300 DPI Printing Standard &middot; 5mm Safety Margin &middot; Client Solution
+  </footer>
+</div>
+
+<!-- Script Libraries (CDNs & Fallback DataMatrix Engine) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bwip-js@3.4.4/dist/bwip-js-min.js"></script>
+
+<script>
+// Global State
+let rawCodeList = [];
+let selectedIndex = 0;
+
+// Drag & Drop Setup
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    processUploadedFile(e.dataTransfer.files[0]);
+  }
+});
+
+function toggleSourceType() {
+  const type = document.querySelector('input[name="sourceType"]:checked').value;
+  document.getElementById('fileSourceBox').style.display = type === 'file' ? 'block' : 'none';
+  document.getElementById('sequenceSourceBox').style.display = type === 'sequence' ? 'block' : 'none';
+}
+
+function handleFileUpload(evt) {
+  const file = evt.target.files[0];
+  if (file) processUploadedFile(file);
+}
+
+function processUploadedFile(file) {
+  document.getElementById('uploadFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      if (!jsonData || jsonData.length === 0) {
+        alert('The uploaded file appears to be empty.');
+        return;
+      }
+
+      // Populate Column Select
+      const headerRow = jsonData[0];
+      const colSelect = document.getElementById('columnSelect');
+      colSelect.innerHTML = '';
+      
+      headerRow.forEach((colName, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = `Column ${idx+1}: "${colName || 'Header '+ (idx+1)}"` ;
+        colSelect.appendChild(option);
+      });
+
+      // Auto-select column named 'Pallet Code' if available
+      let defaultColIdx = 0;
+      headerRow.forEach((colName, idx) => {
+        if (colName && String(colName).toLowerCase().includes('pallet')) {
+          defaultColIdx = idx;
+        }
+      });
+      colSelect.value = defaultColIdx;
+      
+      // Store full sheet rows
+      window.uploadedSheetData = jsonData;
+      document.getElementById('columnSelectRow').style.display = 'block';
+      onColumnSelected();
+
+    } catch (err) {
+      console.error(err);
+      alert('Error parsing Excel/CSV file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function onColumnSelected() {
+  if (!window.uploadedSheetData) return;
+  const colIdx = parseInt(document.getElementById('columnSelect').value);
+  const rows = window.uploadedSheetData;
+  
+  // Extract values starting from row 1 (row 0 is header)
+  let extracted = [];
+  for (let i = 1; i < rows.length; i++) {
+    const val = rows[i][colIdx];
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      extracted.push(String(val).trim());
+    }
+  }
+
+  // Fallback if no header row was present
+  if (extracted.length === 0 && rows.length > 0) {
+    for (let i = 0; i < rows.length; i++) {
+      const val = rows[i][colIdx];
+      if (val !== undefined && val !== null && String(val).trim() !== '') {
+        extracted.push(String(val).trim());
+      }
+    }
+  }
+
+  rawCodeList = extracted;
+  onDataSetUpdated();
+}
+
+function generateSequenceData() {
+  const prefix = document.getElementById('seqPrefix').value;
+  const start = parseInt(document.getElementById('seqStart').value) || 1;
+  const end = parseInt(document.getElementById('seqEnd').value) || 1000;
+  const pad = parseInt(document.getElementById('seqPad').value) || 0;
+
+  if (end < start) {
+    alert('End number must be greater than or equal to Start number.');
+    return;
+  }
+
+  let generated = [];
+  for (let i = start; i <= end; i++) {
+    const numStr = pad > 0 ? String(i).padStart(pad, '0') : String(i);
+    generated.push(`${prefix}${numStr}`);
+  }
+
+  rawCodeList = generated;
+  onDataSetUpdated();
+}
+
+function onDataSetUpdated() {
+  document.getElementById('statTotalRows').textContent = rawCodeList.length.toLocaleString();
+  document.getElementById('tableCountTag').textContent = `${rawCodeList.length.toLocaleString()} ITEMS`;
+
+  // Set default range
+  document.getElementById('rangeStartInput').value = 1;
+  const defaultEnd = Math.min(rawCodeList.length, 500);
+  document.getElementById('rangeEndInput').value = defaultEnd > 0 ? defaultEnd : 1;
+
+  selectedIndex = 0;
+  updateRangeSelection();
+  renderTable();
+  renderPreview();
+}
+
+function setRangePreset(start, end) {
+  if (!rawCodeList.length) {
+    alert('Please upload an Excel file or generate sequence data first.');
+    return;
+  }
+  document.getElementById('rangeStartInput').value = start;
+  const actualEnd = end === 'all' ? rawCodeList.length : Math.min(rawCodeList.length, end);
+  document.getElementById('rangeEndInput').value = actualEnd;
+  updateRangeSelection();
+}
+
+function updateRangeSelection() {
+  const total = rawCodeList.length;
+  let start = parseInt(document.getElementById('rangeStartInput').value) || 1;
+  let end = parseInt(document.getElementById('rangeEndInput').value) || total;
+  const batchSize = parseInt(document.getElementById('batchSizeInput').value) || 500;
+
+  if (start < 1) start = 1;
+  if (end > total && total > 0) end = total;
+  if (start > end) start = end;
+
+  const count = total > 0 ? (end - start + 1) : 0;
+  const batches = count > 0 ? Math.ceil(count / batchSize) : 0;
+
+  document.getElementById('statSelectedRange').textContent = count.toLocaleString();
+  document.getElementById('statZipBatches').textContent = batches;
+
+  document.getElementById('exportEstimateText').textContent = count > 0
+    ? `Processing ${count.toLocaleString()} codes \u2192 ${batches} ZIP file(s) will download automatically.`
+    : `No valid range selected.`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('codeTableBody');
+  if (!rawCodeList.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--ink-soft); padding:20px;">No data loaded.</td></tr>`;
+    return;
+  }
+
+  // Display first 100 items for performance UI table
+  const previewSlice = rawCodeList.slice(0, 100);
+  tbody.innerHTML = previewSlice.map((code, idx) => `
+    <tr class="${idx === selectedIndex ? 'selected' : ''}" onclick="selectRow(${idx})">
+      <td>${idx + 1}</td>
+      <td><strong>${code}</strong></td>
+      <td><button class="btn-chip" onclick="event.stopPropagation(); selectRow(${idx});">Preview</button></td>
+    </tr>
+  `).join('');
+}
+
+function selectRow(idx) {
+  selectedIndex = idx;
+  renderTable();
+  renderPreview();
+}
+
+// ---------------- Dimension & Canvas Rendering ----------------
+
+function getCanvasSpecs() {
+  const wIn = parseFloat(document.getElementById('widthInches').value) || 3.0;
+  const hIn = parseFloat(document.getElementById('heightInches').value) || 3.5;
+  const dpi = parseInt(document.getElementById('dpiSetting').value) || 300;
+  const marginMm = parseFloat(document.getElementById('marginMm').value) || 5.0;
+
+  const widthPx = Math.round(wIn * dpi);
+  const heightPx = Math.round(hIn * dpi);
+  const marginPx = Math.round((marginMm / 25.4) * dpi);
+
+  return { wIn, hIn, dpi, marginMm, widthPx, heightPx, marginPx };
+}
+
+function updateDimensions() {
+  const specs = getCanvasSpecs();
+  document.getElementById('dimBadge').textContent = `${specs.widthPx} \u00D7 ${specs.heightPx} px (${specs.dpi} DPI)`;
+  document.getElementById('prevPixelDim').textContent = `${specs.widthPx} x ${specs.heightPx} px (${specs.wIn}" x ${specs.hIn}")`;
+  document.getElementById('prevMarginPx').textContent = `${specs.marginPx} px (${specs.marginMm} mm @ ${specs.dpi} DPI)`;
+  renderPreview();
+}
+
+function renderStickerOnCanvas(canvas, codeValue, specs, showCutLine = true) {
+  const { widthPx, heightPx, marginPx } = specs;
+  const textPosition = document.getElementById('textPosSelect') ? document.getElementById('textPosSelect').value : 'top';
+
+  canvas.width = widthPx;
+  canvas.height = heightPx;
+  const ctx = canvas.getContext('2d');
+
+  // Solid White Background
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, widthPx, heightPx);
+
+  // Optional 5mm Cut Line Guide (Trimming line)
+  if (showCutLine && marginPx > 0) {
+    ctx.strokeStyle = '#CBD5E1';
+    ctx.lineWidth = Math.max(2, Math.round(widthPx * 0.003));
+    ctx.setLineDash([Math.round(marginPx * 0.2), Math.round(marginPx * 0.2)]);
+    ctx.strokeRect(marginPx, marginPx, widthPx - marginPx * 2, heightPx - marginPx * 2);
+    ctx.setLineDash([]); // Reset line dash
+  }
+
+  // Calculate Safe Zone inside 5mm margin
+  const safeLeft = marginPx;
+  const safeTop = marginPx;
+  const safeWidth = widthPx - marginPx * 2;
+  const safeHeight = heightPx - marginPx * 2;
+
+  // Height Allocations (Compact text zone ~14% height, remaining ~86% for DataMatrix QR to maximize QR size!)
+  const textZoneHeight = Math.round(safeHeight * 0.14);
+  const qrZoneHeight = safeHeight - textZoneHeight;
+
+  let qrZoneTop, textZoneTop;
+  if (textPosition === 'top') {
+    textZoneTop = safeTop;
+    qrZoneTop = safeTop + textZoneHeight;
+  } else {
+    qrZoneTop = safeTop;
+    textZoneTop = safeTop + qrZoneHeight;
+  }
+
+  // Draw DataMatrix 2D Barcode
+  const qrCanvas = document.createElement('canvas');
+  let qrSuccess = false;
+
+  try {
+    if (typeof bwipjs !== 'undefined') {
+      bwipjs.toCanvas(qrCanvas, {
+        bcid: 'datamatrix',
+        text: codeValue || 'PALLET DEMO',
+        scale: 4,
+        margin: 0
+      });
+      qrSuccess = qrCanvas.width > 0 && qrCanvas.height > 0;
+    }
+  } catch (e) {
+    console.error('bwip-js error:', e);
+  }
+
+  // Fallback if bwip-js fails or unavailable
+  if (!qrSuccess) {
+    drawFallbackDataMatrix(qrCanvas, codeValue || 'DEMO');
+  }
+
+  // Safe & Well-Proportioned DataMatrix QR Code size (88% of safe zone leaves extra quiet zone on sides)
+  const maxQRSize = Math.min(safeWidth * 0.88, qrZoneHeight * 0.88);
+  const qrX = safeLeft + (safeWidth - maxQRSize) / 2;
+  const qrY = qrZoneTop + (qrZoneHeight - maxQRSize) / 2;
+
+  ctx.imageSmoothingEnabled = false; // Keep sharp crisp matrix pixels
+  ctx.drawImage(qrCanvas, qrX, qrY, maxQRSize, maxQRSize);
+
+  // Draw Text Code
+  ctx.fillStyle = '#0F172A';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Keep font size bold and clear (~65% of text zone height)
+  const textStr = String(codeValue || 'PALLET 1');
+  let fontSize = Math.round(textZoneHeight * 0.65);
+  ctx.font = `700 ${fontSize}px "IBM Plex Mono", Arial, sans-serif`;
+
+  // Scale down font if text exceeds safe width
+  const measuredWidth = ctx.measureText(textStr).width;
+  const maxTextWidth = safeWidth * 0.94;
+  if (measuredWidth > maxTextWidth) {
+    fontSize = Math.floor(fontSize * (maxTextWidth / measuredWidth));
+    ctx.font = `700 ${fontSize}px "IBM Plex Mono", Arial, sans-serif`;
+  }
+
+  const textY = textZoneTop + (textZoneHeight / 2);
+  ctx.fillText(textStr, safeLeft + (safeWidth / 2), textY);
+}
+
+// Simple Fallback DataMatrix-like Canvas Generator if offline/CDN error
+function drawFallbackDataMatrix(canvas, text) {
+  const size = 200;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, size, size);
+
+  // Generate pseudo-random deterministic matrix pattern based on text hash
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash) + text.charCodeAt(i);
+
+  const grid = 14;
+  const cellSize = size / grid;
+
+  ctx.fillStyle = '#000000';
+  // Standard L-finder pattern for DataMatrix
+  for (let r = 0; r < grid; r++) {
+    for (let c = 0; c < grid; c++) {
+      const isSolidBottom = (r === grid - 1);
+      const isSolidLeft = (c === 0);
+      const isDottedTop = (r === 0 && c % 2 === 0);
+      const isDottedRight = (c === grid - 1 && r % 2 === 0);
+      
+      const bit = ((hash ^ (r * 17 + c * 31)) & 1) === 1;
+
+      if (isSolidBottom || isSolidLeft || isDottedTop || isDottedRight || bit) {
+        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+      }
+    }
+  }
+}
+
+function renderPreview() {
+  const specs = getCanvasSpecs();
+  const codeValue = rawCodeList.length > 0 ? rawCodeList[selectedIndex] : 'PALLET 1';
+  const showCutLine = document.getElementById('showCutLineCheck').checked;
+
+  const canvas = document.getElementById('previewCanvas');
+  renderStickerOnCanvas(canvas, codeValue, specs, showCutLine);
+
+  document.getElementById('prevCodeVal').textContent = codeValue;
+}
+
+function downloadSinglePreview() {
+  const codeValue = rawCodeList.length > 0 ? rawCodeList[selectedIndex] : 'PALLET_1';
+  const canvas = document.getElementById('previewCanvas');
+  
+  // Render clean version without cut line for download
+  const cleanCanvas = document.createElement('canvas');
+  const specs = getCanvasSpecs();
+  renderStickerOnCanvas(cleanCanvas, codeValue, specs, false);
+
+  const safeName = codeValue.replace(/[^A-Za-z0-9\-_]/g, '_');
+  const a = document.createElement('a');
+  a.href = cleanCanvas.toDataURL('image/png');
+  a.download = `${safeName}_300DPI.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ---------------- Batch ZIP Generation Engine ----------------
+
+let isExporting = false;
+
+function yieldToUI() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+function canvasToBlob(canvas) {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+async function startBatchExport() {
+  if (isExporting) return;
+  if (!rawCodeList.length) {
+    alert('Please upload an Excel file or generate sequence data first.');
+    return;
+  }
+
+  const total = rawCodeList.length;
+  let startIdx = (parseInt(document.getElementById('rangeStartInput').value) || 1) - 1;
+  let endIdx = (parseInt(document.getElementById('rangeEndInput').value) || total) - 1;
+  const batchSize = parseInt(document.getElementById('batchSizeInput').value) || 500;
+
+  if (startIdx < 0) startIdx = 0;
+  if (endIdx >= total) endIdx = total - 1;
+  if (startIdx > endIdx) {
+    alert('Invalid row range specified.');
+    return;
+  }
+
+  const selectedRows = rawCodeList.slice(startIdx, endIdx + 1);
+  const totalCount = selectedRows.length;
+  const totalBatches = Math.ceil(totalCount / batchSize);
+
+  const startBtn = document.getElementById('startExportBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressStatusText = document.getElementById('progressStatusText');
+  const progressPercent = document.getElementById('progressPercent');
+
+  isExporting = true;
+  startBtn.disabled = true;
+  startBtn.textContent = 'Generating DataMatrix Labels...';
+  progressWrap.style.display = 'block';
+
+  const specs = getCanvasSpecs();
+  let processed = 0;
+
+  for (let b = 0; b < totalBatches; b++) {
+    const batchChunk = selectedRows.slice(b * batchSize, (b + 1) * batchSize);
+    const zip = new JSZip();
+    const folder = zip.folder('datamatrix_stickers');
+
+    for (let i = 0; i < batchChunk.length; i++) {
+      const codeVal = batchChunk[i];
+      
+      // Render 300 DPI canvas without cut guide line
+      const renderCanvas = document.createElement('canvas');
+      renderStickerOnCanvas(renderCanvas, codeVal, specs, false);
+
+      const blob = await canvasToBlob(renderCanvas);
+      const safeName = (codeVal || `code_${startIdx + b * batchSize + i + 1}`).replace(/[^A-Za-z0-9\-_]/g, '_');
+      folder.file(`${safeName}.png`, blob);
+
+      processed++;
+      const pct = Math.round((processed / totalCount) * 100);
+      progressBar.style.width = pct + '%';
+      progressPercent.textContent = pct + '%';
+      progressStatusText.textContent = `Batch ${b + 1} of ${totalBatches} — ${processed} / ${totalCount} labels`;
+
+      // Yield UI every 15 renders so browser interface stays 100% fluid
+      if (i % 15 === 0) await yieldToUI();
+    }
+
+    progressStatusText.textContent = `Packaging ZIP file for batch ${b + 1} of ${totalBatches}...`;
+    await yieldToUI();
+
+    const zipContent = await zip.generateAsync({ type: 'blob' });
+    
+    // Trigger download
+    const zipName = `DataMatrix_300DPI_Batch${b + 1}_of_${totalBatches}_(Rows_${startIdx + b * batchSize + 1}-${startIdx + Math.min((b + 1) * batchSize, totalCount)}).zip`;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(zipContent);
+    a.download = zipName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+
+    await yieldToUI();
+  }
+
+  progressStatusText.textContent = `Complete! ${processed} labels saved into ${totalBatches} ZIP package(s).`;
+  startBtn.disabled = false;
+  startBtn.textContent = '\u25BC Start Batch ZIP Export';
+  isExporting = false;
+}
+
+// Initial setup
+toggleSourceType();
+generateSequenceData();
+updateDimensions();
+</script>
+
+</body>
+</html>
