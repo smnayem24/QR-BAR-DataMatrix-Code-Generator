@@ -241,9 +241,10 @@ LabelApp.CodeEngine.renderLabelToCanvas = function(item, dims, dpi, userSettings
   ctx.fillRect(0, 0, widthPx, heightPx);
 
   // =========================================================================
-  // DATA MATRIX DEDICATED STICKER LAYOUT (AS IN DATAMATRIXGENERATOR.HTML)
+  // DEDICATED 2D INDUSTRIAL STICKER LAYOUT (DATA MATRIX & QR CODE)
+  // Supports 5mm safety margin, trimming cut line, and crisp matrix pixels
   // =========================================================================
-  if (codeType === 'datamatrix') {
+  if (codeType === 'datamatrix' || codeType === 'qrcode') {
     const marginPx = Math.round((marginMm / 25.4) * dpi);
 
     // Optional 5mm Cut Line Guide (Trimming line)
@@ -280,46 +281,82 @@ LabelApp.CodeEngine.renderLabelToCanvas = function(item, dims, dpi, userSettings
       qrZoneTop = safeTop + textZoneHeight;
     }
 
-    // Draw DataMatrix with bwip-js or fallback
-    const dmCanvas = document.createElement('canvas');
-    let dmSuccess = false;
+    // Draw 2D Code (DataMatrix or QR Code) with bwip-js or fallback
+    const codeCanvas = document.createElement('canvas');
+    let renderSuccess = false;
     const cleanText = item.code.toUpperCase();
 
     try {
-      if (typeof bwipjs !== 'undefined') {
-        bwipjs.toCanvas(dmCanvas, {
-          bcid: format === 'datamatrixrectangular' ? 'datamatrixrectangular' : 'datamatrix',
-          text: cleanText,
-          scale: Math.max(4, Math.round(dpi / 60)),
-          includetext: false,
-          barcolor: barColor.replace('#', ''),
-          backgroundcolor: bgColor.replace('#', '')
-        });
-        dmSuccess = dmCanvas.width > 0 && dmCanvas.height > 0;
+      if (typeof bwipjs !== 'undefined' && bwipjs.toCanvas) {
+        if (codeType === 'qrcode') {
+          bwipjs.toCanvas(codeCanvas, {
+            bcid: 'qrcode',
+            text: cleanText,
+            eclevel: s.qrEcc || 'M',
+            scale: Math.max(3, Math.round(dpi / 75)),
+            includetext: false,
+            barcolor: barColor.replace('#', ''),
+            backgroundcolor: bgColor.replace('#', '')
+          });
+          renderSuccess = codeCanvas.width > 0 && codeCanvas.height > 0;
+        } else {
+          bwipjs.toCanvas(codeCanvas, {
+            bcid: format === 'datamatrixrectangular' ? 'datamatrixrectangular' : 'datamatrix',
+            text: cleanText,
+            scale: Math.max(4, Math.round(dpi / 60)),
+            includetext: false,
+            barcolor: barColor.replace('#', ''),
+            backgroundcolor: bgColor.replace('#', '')
+          });
+          renderSuccess = codeCanvas.width > 0 && codeCanvas.height > 0;
+        }
       }
     } catch (e) {
-      console.warn('Data Matrix Canvas error:', e);
+      console.warn(`${codeType} Canvas render error:`, e);
     }
 
-    if (!dmSuccess) {
-      LabelApp.CodeEngine.drawFallbackDataMatrix(dmCanvas, cleanText);
+    if (!renderSuccess) {
+      if (codeType === 'qrcode') {
+        if (typeof QRCode !== 'undefined') {
+          const tempDiv = document.createElement('div');
+          new QRCode(tempDiv, {
+            text: cleanText,
+            width: 300,
+            height: 300,
+            colorDark: barColor,
+            colorLight: bgColor,
+            correctLevel: (s.qrEcc === 'H') ? QRCode.CorrectLevel.H : (s.qrEcc === 'Q') ? QRCode.CorrectLevel.Q : (s.qrEcc === 'L') ? QRCode.CorrectLevel.L : QRCode.CorrectLevel.M
+          });
+          const generatedCanvas = tempDiv.querySelector('canvas');
+          if (generatedCanvas) {
+            codeCanvas.width = generatedCanvas.width;
+            codeCanvas.height = generatedCanvas.height;
+            const cCtx = codeCanvas.getContext('2d');
+            cCtx.drawImage(generatedCanvas, 0, 0);
+            renderSuccess = true;
+          }
+        }
+      } else {
+        LabelApp.CodeEngine.drawFallbackDataMatrix(codeCanvas, cleanText);
+        renderSuccess = true;
+      }
     }
 
-    // Maximize DataMatrix square size while preserving quiet zone
-    const dmAspect = (dmCanvas.width || 1) / (dmCanvas.height || 1);
-    let targetDmH = Math.round(qrZoneHeight * 0.88);
-    let targetDmW = Math.round(targetDmH * dmAspect);
+    // Maximize 2D code size while preserving quiet zone
+    const codeAspect = (codeCanvas.width || 1) / (codeCanvas.height || 1);
+    let targetH = Math.round(qrZoneHeight * 0.88);
+    let targetW = Math.round(targetH * codeAspect);
 
-    if (targetDmW > safeWidth * 0.90) {
-      targetDmW = Math.round(safeWidth * 0.90);
-      targetDmH = Math.round(targetDmW / dmAspect);
+    if (targetW > safeWidth * 0.90) {
+      targetW = Math.round(safeWidth * 0.90);
+      targetH = Math.round(targetW / codeAspect);
     }
 
-    const qrX = safeLeft + Math.round((safeWidth - targetDmW) / 2);
-    const qrY = qrZoneTop + Math.round((qrZoneHeight - targetDmH) / 2);
+    const qrX = safeLeft + Math.round((safeWidth - targetW) / 2);
+    const qrY = qrZoneTop + Math.round((qrZoneHeight - targetH) / 2);
 
     ctx.imageSmoothingEnabled = false; // Sharp razor-crisp matrix pixels
-    ctx.drawImage(dmCanvas, qrX, qrY, targetDmW, targetDmH);
+    ctx.drawImage(codeCanvas, qrX, qrY, targetW, targetH);
     ctx.imageSmoothingEnabled = true;
 
     // Draw Text with User Font Size & Letter Spacing
@@ -480,9 +517,9 @@ LabelApp.CodeEngine.renderLabelToSVG = function(item, dims, userSettings) {
   const showCutLine = Boolean(s.showCutLine);
 
   // =========================================================================
-  // DATA MATRIX VECTOR SVG
+  // DEDICATED 2D INDUSTRIAL STICKER VECTOR SVG (DATA MATRIX & QR CODE)
   // =========================================================================
-  if (codeType === 'datamatrix') {
+  if (codeType === 'datamatrix' || codeType === 'qrcode') {
     const marginPx = Math.round((marginMm / 25.4) * 96);
 
     let cutLineSvg = '';
@@ -509,40 +546,49 @@ LabelApp.CodeEngine.renderLabelToSVG = function(item, dims, userSettings) {
     }
 
     const cleanText = item.code.toUpperCase();
-    let dmSvgContent = '';
+    let codeSvgContent = '';
     try {
-      const dmSvgStr = bwipjs.toSVG({
-        bcid: format === 'datamatrixrectangular' ? 'datamatrixrectangular' : 'datamatrix',
+      const bcidName = (codeType === 'qrcode')
+        ? 'qrcode'
+        : ((format === 'datamatrixrectangular') ? 'datamatrixrectangular' : 'datamatrix');
+
+      const bwipOpts = {
+        bcid: bcidName,
         text: cleanText,
         scale: 3,
         barcolor: barColor.replace('#', '')
-      });
+      };
+      if (codeType === 'qrcode') {
+        bwipOpts.eclevel = s.qrEcc || 'M';
+      }
 
-      const vbMatch = /viewBox="([^"]+)"/.exec(dmSvgStr);
+      const generatedSvgStr = bwipjs.toSVG(bwipOpts);
+
+      const vbMatch = /viewBox="([^"]+)"/.exec(generatedSvgStr);
       const vb = vbMatch ? vbMatch[1] : '0 0 100 100';
       const parts = vb.split(/\s+/).map(Number);
       const natW = parts[2] || 100;
       const natH = parts[3] || 100;
-      const dmAspect = natW / natH;
+      const codeAspect = natW / natH;
 
-      let targetDmH = Math.round(qrZoneHeight * 0.88);
-      let targetDmW = Math.round(targetDmH * dmAspect);
-      if (targetDmW > safeWidth * 0.90) {
-        targetDmW = Math.round(safeWidth * 0.90);
-        targetDmH = Math.round(targetDmW / dmAspect);
+      let targetH = Math.round(qrZoneHeight * 0.88);
+      let targetW = Math.round(targetH * codeAspect);
+      if (targetW > safeWidth * 0.90) {
+        targetW = Math.round(safeWidth * 0.90);
+        targetH = Math.round(targetW / codeAspect);
       }
 
-      const qx = safeLeft + Math.round((safeWidth - targetDmW) / 2);
-      const qy = qrZoneTop + Math.round((qrZoneHeight - targetDmH) / 2);
-      const innerContent = dmSvgStr.replace(/^<svg[^>]*>|<\/svg>$/gi, '');
+      const qx = safeLeft + Math.round((safeWidth - targetW) / 2);
+      const qy = qrZoneTop + Math.round((qrZoneHeight - targetH) / 2);
+      const innerContent = generatedSvgStr.replace(/^<svg[^>]*>|<\/svg>$/gi, '');
 
-      dmSvgContent = `
-        <svg x="${qx}" y="${qy}" width="${targetDmW}" height="${targetDmH}" viewBox="${vb}">
+      codeSvgContent = `
+        <svg x="${qx}" y="${qy}" width="${targetW}" height="${targetH}" viewBox="${vb}">
           ${innerContent}
         </svg>
       `;
     } catch (e) {
-      console.warn('Data Matrix SVG error:', e);
+      console.warn(`${codeType} SVG error:`, e);
     }
 
     let textSvg = '';
@@ -559,7 +605,7 @@ LabelApp.CodeEngine.renderLabelToSVG = function(item, dims, userSettings) {
   <rect width="100%" height="100%" fill="${bgColor}"/>
   ${cutLineSvg}
   ${textSvg}
-  ${dmSvgContent}
+  ${codeSvgContent}
 </svg>`;
   }
 

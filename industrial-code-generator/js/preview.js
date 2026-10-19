@@ -23,17 +23,36 @@ LabelApp.getUserSettings = function() {
     barcodeFormat = 'QR';
   }
 
-  const marginMmInput = document.getElementById('marginMm');
-  const showCutLineCheck = document.getElementById('showCutLineCheck');
+  let marginMm = 5.0;
+  let showCutLine = true;
+
+  if (codeType === 'datamatrix') {
+    const marginMmInput = document.getElementById('marginMm');
+    const showCutLineCheck = document.getElementById('showCutLineCheck');
+    marginMm = marginMmInput ? (parseFloat(marginMmInput.value) || 5.0) : 5.0;
+    showCutLine = showCutLineCheck ? showCutLineCheck.checked : true;
+  } else if (codeType === 'qrcode') {
+    const qrMarginMmInput = document.getElementById('qrMarginMm');
+    const qrShowCutLineCheck = document.getElementById('qrShowCutLineCheck');
+    marginMm = qrMarginMmInput ? (parseFloat(qrMarginMmInput.value) || 5.0) : 5.0;
+    showCutLine = qrShowCutLineCheck ? qrShowCutLineCheck.checked : true;
+  }
+
+  const qrEccSelect = document.getElementById('qrEcc');
+  const qrEcc = qrEccSelect ? qrEccSelect.value : 'M';
+
+  const rawLs = document.getElementById('letterSpacing') ? parseFloat(document.getElementById('letterSpacing').value) : 1;
+  const letterSpacing = isNaN(rawLs) ? 0 : rawLs;
 
   return {
     codeType: codeType,
     barcodeFormat: barcodeFormat,
+    qrEcc: qrEcc,
     textPosition: document.getElementById('textPosition').value,
     fontFamily: document.getElementById('fontFamily').value,
     fontWeight: document.getElementById('fontWeight').value,
     fontSize: parseInt(document.getElementById('fontSize').value) || 22,
-    letterSpacing: parseFloat(document.getElementById('letterSpacing').value) || 1,
+    letterSpacing: letterSpacing,
     slashedZero: document.getElementById('enableSlashedZero').checked,
     borderStyle: document.getElementById('borderStyle').value,
     labelPadding: parseInt(document.getElementById('labelPadding').value) || 12,
@@ -43,8 +62,8 @@ LabelApp.getUserSettings = function() {
     barcodeWidthRatio: parseInt(document.getElementById('barcodeWidthRatio').value) || 90,
     barcodeHeightRatio: parseInt(document.getElementById('barcodeHeightRatio').value) || 70,
     gridCols: parseInt(document.getElementById('gridCols').value) || 6,
-    marginMm: marginMmInput ? (parseFloat(marginMmInput.value) || 5.0) : 5.0,
-    showCutLine: showCutLineCheck ? showCutLineCheck.checked : true
+    marginMm: marginMm,
+    showCutLine: showCutLine
   };
 };
 
@@ -127,7 +146,7 @@ LabelApp.renderPreview = function() {
 
   const singleDimTag = document.getElementById('singleDimTag');
   if (singleDimTag) {
-    if (s.codeType === 'datamatrix') {
+    if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
       singleDimTag.textContent = `${dims.widthRaw} × ${dims.heightRaw} ${dims.unit} (${widthMm} × ${heightMm} mm) • ${s.marginMm}mm Cut Zone`;
     } else {
       singleDimTag.textContent = `${dims.widthRaw} × ${dims.heightRaw} ${dims.unit} (${widthMm} × ${heightMm} mm)`;
@@ -157,8 +176,8 @@ LabelApp.renderPreview = function() {
   singleFrame.style.width = `${Math.round(inspectorW)}px`;
   singleFrame.style.height = `${Math.round(inspectorH)}px`;
 
-  // For DataMatrix, render exact high-precision canvas sticker with cut line
-  if (s.codeType === 'datamatrix') {
+  // For 2D Codes (DataMatrix & QR Code), render exact high-precision canvas sticker with cut line
+  if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
     singleFrame.className = 'single-label-frame';
     singleFrame.style.padding = '0px';
     singleFrame.style.border = 'none';
@@ -251,8 +270,8 @@ LabelApp.renderPreview = function() {
 
   const gridItemHeight = Math.max(90, Math.round(150 * (heightIn / widthIn)));
 
-  if (s.codeType === 'datamatrix') {
-    // For DataMatrix batch view, render miniature stickers matching the 5mm trimming & layout
+  if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
+    // For 2D batch view, render miniature stickers matching the 5mm trimming & layout
     gridContainer.innerHTML = displayItems.map((item, relIdx) => {
       const globalIdx = startIndex + relIdx;
       const isSelected = globalIdx === safeIdx ? 'selected-item' : '';

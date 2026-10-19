@@ -21,6 +21,7 @@ LabelApp.setCodeType = function(type) {
   // 2. Show/Hide contextual settings
   const barcodeSymbologyWrap = document.getElementById('barcodeSymbologyWrap');
   const datamatrixOptionsWrap = document.getElementById('datamatrixOptionsWrap');
+  const qrcodeOptionsWrap = document.getElementById('qrcodeOptionsWrap');
 
   if (barcodeSymbologyWrap) {
     barcodeSymbologyWrap.style.display = (type === 'barcode') ? 'block' : 'none';
@@ -28,10 +29,13 @@ LabelApp.setCodeType = function(type) {
   if (datamatrixOptionsWrap) {
     datamatrixOptionsWrap.style.display = (type === 'datamatrix') ? 'block' : 'none';
   }
+  if (qrcodeOptionsWrap) {
+    qrcodeOptionsWrap.style.display = (type === 'qrcode') ? 'block' : 'none';
+  }
 
-  // 3. For DataMatrix, switch to 3" x 3.5" Pallet/Sticker preset if currently on default 6x3
+  // 3. For 2D codes (DataMatrix & QR), switch to 3" x 3.5" Pallet/Sticker preset if currently on default 6x3
   const sizePresetSelect = document.getElementById('sizePresetSelect');
-  if (type === 'datamatrix') {
+  if (type === 'datamatrix' || type === 'qrcode') {
     if (sizePresetSelect && sizePresetSelect.value === '6x3-l') {
       sizePresetSelect.value = '3x3.5-p';
       LabelApp.handleSizePresetChange();
