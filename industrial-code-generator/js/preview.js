@@ -63,7 +63,8 @@ LabelApp.getUserSettings = function() {
     barcodeHeightRatio: parseInt(document.getElementById('barcodeHeightRatio').value) || 70,
     gridCols: parseInt(document.getElementById('gridCols').value) || 6,
     marginMm: marginMm,
-    showCutLine: showCutLine
+    showCutLine: showCutLine,
+    drawSheetCutLines: document.getElementById('drawSheetCutLines') ? document.getElementById('drawSheetCutLines').checked : true
   };
 };
 
@@ -243,6 +244,14 @@ LabelApp.renderPreview = function() {
   gridContainer.style.gridTemplateColumns = `repeat(${cols}, minmax(135px, 1fr))`;
   gridContainer.style.width = (cols >= 6) ? `${cols * 145}px` : '100%';
 
+  let cutLineClass = '';
+  if (s.drawSheetCutLines && s.borderStyle !== 'none') {
+    if (s.borderStyle === 'solid-dark') cutLineClass = 'has-cut-lines-dark';
+    else if (s.borderStyle === 'dashed') cutLineClass = 'has-cut-lines-dashed';
+    else cutLineClass = 'has-cut-lines';
+  }
+  gridContainer.className = `barcode-sheet-grid ${cutLineClass}`;
+
   const maxPreviewRows = 4;
   const itemsPerPage = Math.max(1, cols * maxPreviewRows);
   const totalGridPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
@@ -271,12 +280,12 @@ LabelApp.renderPreview = function() {
   const gridItemHeight = Math.max(90, Math.round(150 * (heightIn / widthIn)));
 
   if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
-    // For 2D batch view, render miniature stickers matching the 5mm trimming & layout
+    // For 2D batch view, render miniature stickers matching the continuous cut lines & layout
     gridContainer.innerHTML = displayItems.map((item, relIdx) => {
       const globalIdx = startIndex + relIdx;
       const isSelected = globalIdx === safeIdx ? 'selected-item' : '';
       return `
-        <div class="barcode-item ${isSelected}" id="bc-item-${globalIdx}" onclick="LabelApp.selectLabelIndex(${globalIdx})" style="padding: 4px; background-color: ${s.bgColor}; min-height: ${gridItemHeight}px;">
+        <div class="barcode-item ${borderClass} ${isSelected}" id="bc-item-${globalIdx}" onclick="LabelApp.selectLabelIndex(${globalIdx})" style="padding: 0px; background-color: ${s.bgColor}; min-height: ${gridItemHeight}px;">
           <div class="item-actions">
             <button class="mini-icon-btn" title="Download PNG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'png')">PNG</button>
             <button class="mini-icon-btn" title="Download SVG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'svg')">SVG</button>
@@ -291,9 +300,9 @@ LabelApp.renderPreview = function() {
       const wrapEl = document.getElementById(`grid-dm-canvas-wrap-${globalIdx}`);
       if (wrapEl) {
         const miniCanvas = LabelApp.CodeEngine.renderLabelToCanvas(item, dims, 120, s);
-        miniCanvas.style.maxWidth = '100%';
-        miniCanvas.style.maxHeight = `${gridItemHeight}px`;
-        miniCanvas.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        miniCanvas.style.width = '100%';
+        miniCanvas.style.height = '100%';
+        miniCanvas.style.display = 'block';
         wrapEl.appendChild(miniCanvas);
       }
     });

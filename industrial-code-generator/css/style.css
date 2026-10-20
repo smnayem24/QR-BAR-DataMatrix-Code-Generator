@@ -670,6 +670,43 @@ button {
   border-collapse: collapse;
 }
 
+/* Continuous Cut Divider Lines between Rows & Columns */
+.barcode-sheet-grid.has-cut-lines {
+  border-top: 1px solid #CBD5E1;
+  border-left: 1px solid #CBD5E1;
+}
+
+.barcode-sheet-grid.has-cut-lines .barcode-item {
+  border-right: 1px solid #CBD5E1 !important;
+  border-bottom: 1px solid #CBD5E1 !important;
+  border-top: none !important;
+  border-left: none !important;
+}
+
+.barcode-sheet-grid.has-cut-lines-dark {
+  border-top: 1px solid #334155;
+  border-left: 1px solid #334155;
+}
+
+.barcode-sheet-grid.has-cut-lines-dark .barcode-item {
+  border-right: 1px solid #334155 !important;
+  border-bottom: 1px solid #334155 !important;
+  border-top: none !important;
+  border-left: none !important;
+}
+
+.barcode-sheet-grid.has-cut-lines-dashed {
+  border-top: 1px dashed #94A3B8;
+  border-left: 1px dashed #94A3B8;
+}
+
+.barcode-sheet-grid.has-cut-lines-dashed .barcode-item {
+  border-right: 1px dashed #94A3B8 !important;
+  border-bottom: 1px dashed #94A3B8 !important;
+  border-top: none !important;
+  border-left: none !important;
+}
+
 .barcode-item {
   background: #FFFFFF;
   display: flex;

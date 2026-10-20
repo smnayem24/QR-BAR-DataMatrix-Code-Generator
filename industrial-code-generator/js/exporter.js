@@ -248,8 +248,42 @@ LabelApp.exportPDF = async function() {
           if (progressBar) progressBar.style.width = pct + '%';
           if (progressNote) progressNote.textContent = `Master Roll: Placing label ${renderedCount}/${total} (Col ${c + 1}/${cols}, Row ${globalRow + 1}/${totalRows})...`;
 
-          if (renderedCount % 6 === 0) await LabelApp.yieldFrame();
         }
+      }
+
+      // Draw Continuous Cut Lines between Rows & Columns on the Master Sheet
+      if (s.drawSheetCutLines && s.borderStyle !== 'none') {
+        const isDashed = (s.borderStyle === 'dashed');
+        const isDark = (s.borderStyle === 'solid-dark');
+
+        if (pdf.saveGraphicsState) pdf.saveGraphicsState();
+        if (isDark) {
+          pdf.setDrawColor(40, 50, 70);
+        } else {
+          pdf.setDrawColor(203, 213, 225); // #CBD5E1 crisp clean cut line
+        }
+        pdf.setLineWidth(0.008); // 0.008 in razor-thin precision line
+
+        if (isDashed && pdf.setLineDashPattern) {
+          pdf.setLineDashPattern([0.05, 0.05], 0);
+        }
+
+        // Draw vertical cut lines between columns
+        for (let c = 1; c < cols; c++) {
+          const cutX = c * labelW + (c - 0.5) * gapIn;
+          pdf.line(cutX, 0, cutX, pageHeightIn);
+        }
+
+        // Draw horizontal cut lines between rows
+        for (let r = 1; r < rowsInThisPage; r++) {
+          const cutY = r * labelH + (r - 0.5) * gapIn;
+          pdf.line(0, cutY, sheetWidthIn, cutY);
+        }
+
+        // Outer sheet perimeter cut border
+        pdf.rect(0, 0, sheetWidthIn, pageHeightIn, 'S');
+
+        if (pdf.restoreGraphicsState) pdf.restoreGraphicsState();
       }
     }
 
