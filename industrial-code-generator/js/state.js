@@ -164,6 +164,10 @@ LabelApp.updateStats = function() {
   const estPages = Math.max(1, Math.ceil(count / itemsPerPage));
   const statPages = document.getElementById('statPages');
   if (statPages) statPages.textContent = estPages;
+
+  if (LabelApp.updateRollEstimate) {
+    LabelApp.updateRollEstimate();
+  }
 };
 
 /**

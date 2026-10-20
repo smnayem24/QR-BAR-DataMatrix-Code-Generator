@@ -13,7 +13,7 @@ LabelApp.CodeEngine = {};
 /**
  * Checks if the current selected code is 2D (Data Matrix or QR Code)
  */
-LabelApp.CodeEngine.is2D = function(codeType) {
+LabelApp.CodeEngine.is2D = function (codeType) {
   return codeType === 'datamatrix' || codeType === 'qrcode';
 };
 
@@ -21,7 +21,7 @@ LabelApp.CodeEngine.is2D = function(codeType) {
  * Fallback DataMatrix Generator with Authentic L-Finder Pattern
  * Used if offline or if CDN fails, ensuring 100% reliability
  */
-LabelApp.CodeEngine.drawFallbackDataMatrix = function(canvas, text) {
+LabelApp.CodeEngine.drawFallbackDataMatrix = function (canvas, text) {
   const size = 300;
   canvas.width = size;
   canvas.height = size;
@@ -56,7 +56,7 @@ LabelApp.CodeEngine.drawFallbackDataMatrix = function(canvas, text) {
 /**
  * Measure text width considering letter spacing
  */
-LabelApp.CodeEngine.measureTextWithSpacing = function(ctx, text, letterSpacing) {
+LabelApp.CodeEngine.measureTextWithSpacing = function (ctx, text, letterSpacing) {
   if ('letterSpacing' in ctx) {
     ctx.letterSpacing = `${letterSpacing}px`;
     return ctx.measureText(text).width;
@@ -69,7 +69,7 @@ LabelApp.CodeEngine.measureTextWithSpacing = function(ctx, text, letterSpacing) 
 /**
  * Draw text with letter spacing on 2D canvas (native + fallback support)
  */
-LabelApp.CodeEngine.drawTextWithSpacing = function(ctx, text, x, y, letterSpacing, align = 'center') {
+LabelApp.CodeEngine.drawTextWithSpacing = function (ctx, text, x, y, letterSpacing, align = 'center') {
   if ('letterSpacing' in ctx) {
     ctx.letterSpacing = `${letterSpacing}px`;
     ctx.fillText(text, x, y);
@@ -92,9 +92,40 @@ LabelApp.CodeEngine.drawTextWithSpacing = function(ctx, text, x, y, letterSpacin
 };
 
 /**
+ * Measure jsPDF text width including letter spacing (document units).
+ */
+LabelApp.CodeEngine.measurePdfTextWithSpacing = function (pdf, text, charSpace) {
+  const chars = String(text || '').split('');
+  if (!chars.length) return 0;
+  let totalW = 0;
+  for (let i = 0; i < chars.length; i++) {
+    totalW += pdf.getTextWidth(chars[i]);
+    if (i < chars.length - 1) totalW += charSpace;
+  }
+  return totalW;
+};
+
+/**
+ * Draw centered text on jsPDF with letter spacing.
+ * Do NOT use setCharSpace when PDF unit is 'in' — it treats values as inches.
+ */
+LabelApp.CodeEngine.drawPdfTextWithSpacing = function (pdf, text, centerX, y, charSpace, textOpts) {
+  const chars = String(text || '').split('');
+  if (!chars.length) return;
+  const totalW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, text, charSpace);
+  let curX = centerX - totalW / 2;
+  const opts = textOpts || { baseline: 'middle' };
+  for (let i = 0; i < chars.length; i++) {
+    const charW = pdf.getTextWidth(chars[i]);
+    pdf.text(chars[i], curX, y, opts);
+    curX += charW + (i < chars.length - 1 ? charSpace : 0);
+  }
+};
+
+/**
  * Render code directly into a DOM container element (used for Inspector & Grid Preview)
  */
-LabelApp.CodeEngine.renderIntoDOM = function(containerEl, codeText, codeType, barcodeFormat, barColor, bgColor, boxWidth, boxHeight) {
+LabelApp.CodeEngine.renderIntoDOM = function (containerEl, codeText, codeType, barcodeFormat, barColor, bgColor, boxWidth, boxHeight) {
   if (!containerEl) return;
   containerEl.innerHTML = '';
 
@@ -115,7 +146,7 @@ LabelApp.CodeEngine.renderIntoDOM = function(containerEl, codeText, codeType, ba
       if (typeof bwipjs !== 'undefined' && bwipjs.toCanvas) {
         const cleanBarColor = barColor.replace('#', '');
         const cleanBgColor = (bgColor && bgColor !== 'transparent') ? bgColor.replace('#', '') : 'FFFFFF';
-        
+
         bwipjs.toCanvas(canvas, {
           bcid: barcodeFormat === 'datamatrixrectangular' ? 'datamatrixrectangular' : 'datamatrix',
           text: cleanText,
@@ -210,7 +241,7 @@ LabelApp.CodeEngine.renderIntoDOM = function(containerEl, codeText, codeType, ba
  * Render single label to high-DPI HTMLCanvasElement
  * Includes DataMatrix 5mm safety border & cut line trimming guide support
  */
-LabelApp.CodeEngine.renderLabelToCanvas = function(item, dims, dpi, userSettings) {
+LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSettings) {
   const { widthIn, heightIn } = dims;
   const widthPx = Math.round(widthIn * dpi);
   const heightPx = Math.round(heightIn * dpi);
@@ -494,7 +525,7 @@ LabelApp.CodeEngine.renderLabelToCanvas = function(item, dims, dpi, userSettings
 /**
  * Render single label to Vector XML/SVG string
  */
-LabelApp.CodeEngine.renderLabelToSVG = function(item, dims, userSettings) {
+LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
   const { widthIn, heightIn } = dims;
   const wPx = Math.round(widthIn * 96);
   const hPx = Math.round(heightIn * 96);
@@ -707,3 +738,244 @@ LabelApp.CodeEngine.renderLabelToSVG = function(item, dims, userSettings) {
   ${bottomTextSvg}
 </svg>`;
 };
+
+/**
+ * Utility: Convert Hex color to [R, G, B]
+ */
+LabelApp.hexToRgb = function (hex) {
+  if (!hex) return [0, 0, 0];
+  let c = String(hex).replace('#', '').trim();
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return [0, 0, 0];
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+};
+
+/**
+ * ==========================================================================
+ * HIGH-SPEED PURE VECTOR PDF LABEL RENDERER
+ * Renders labels directly to jsPDF as native vector primitives.
+ * Solves browser crashes and out-of-memory errors on massive 3,800+ batches!
+ * ==========================================================================
+ */
+LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
+  const labelW = dims.widthIn;
+  const labelH = dims.heightIn;
+  const codeType = s.codeType || 'barcode';
+  const format = s.barcodeFormat || 'CODE128';
+  const cleanText = String(item.code || '').toUpperCase();
+  const titleText = String(item.title || item.code || '').toUpperCase();
+  const textPos = s.textPosition || 'top';
+  const hasText = (textPos !== 'none');
+
+  // 1. Draw solid background if not standard white
+  if (s.bgColor && s.bgColor.toUpperCase() !== '#FFFFFF') {
+    const bgRgb = LabelApp.hexToRgb(s.bgColor) || [255, 255, 255];
+    pdf.setFillColor(bgRgb[0], bgRgb[1], bgRgb[2]);
+    pdf.rect(posX, posY, labelW, labelH, 'F');
+  }
+
+  // 2. Safety Margin calculation
+  const marginMm = (typeof s.marginMm === 'number') ? s.marginMm : 4.0;
+  const marginIn = marginMm / 25.4;
+  const showCutLine = Boolean(s.showCutLine);
+
+  const safeW = Math.max(0.1, labelW - marginIn * 2);
+  const safeH = Math.max(0.1, labelH - marginIn * 2);
+  const safeLeft = posX + marginIn;
+  const safeTop = posY + marginIn;
+
+  // 3. Optional Dashed Cut Line Guide (Trimming guide)
+  if (showCutLine && marginIn > 0) {
+    pdf.setDrawColor(203, 213, 225); // #CBD5E1
+    pdf.setLineWidth(0.008);
+    if (pdf.setLineDashPattern) pdf.setLineDashPattern([0.04, 0.04], 0);
+    pdf.rect(safeLeft, safeTop, safeW, safeH, 'S');
+    if (pdf.setLineDashPattern) pdf.setLineDashPattern([], 0);
+  }
+
+  // 4. Height allocation for 2D vs 1D
+  const is2D = (codeType === 'datamatrix' || codeType === 'qrcode');
+  const textZoneH = hasText ? (safeH * 0.16) : 0;
+  const qrZoneH = safeH - textZoneH;
+
+  let qrZoneTop, textZoneTop;
+  if (textPos === 'bottom') {
+    qrZoneTop = safeTop;
+    textZoneTop = safeTop + qrZoneH;
+  } else {
+    textZoneTop = safeTop;
+    qrZoneTop = safeTop + textZoneH;
+  }
+
+  // 5. Draw 2D or 1D Code as Pure Vector Rectangles
+  if (is2D) {
+    const bcid = (codeType === 'qrcode')
+      ? 'qrcode'
+      : ((format === 'datamatrixrectangular') ? 'datamatrixrectangular' : 'datamatrix');
+
+    // Sample module matrix using tiny 1-scale canvas (~16x16 or 24x24 px, 0.1ms, ~0 RAM)
+    const mCanvas = document.createElement('canvas');
+    let mSuccess = false;
+
+    try {
+      if (typeof bwipjs !== 'undefined' && bwipjs.toCanvas) {
+        const bwOpts = {
+          bcid: bcid,
+          text: cleanText,
+          scale: 1,
+          includetext: false,
+          barcolor: '000000',
+          backgroundcolor: 'ffffff'
+        };
+        if (codeType === 'qrcode') {
+          bwOpts.eclevel = s.qrEcc || 'M';
+        }
+        bwipjs.toCanvas(mCanvas, bwOpts);
+        mSuccess = (mCanvas.width > 0 && mCanvas.height > 0);
+      }
+    } catch (e) {
+      console.warn('Vector matrix render warning:', e);
+    }
+
+    if (!mSuccess) {
+      LabelApp.CodeEngine.drawFallbackDataMatrix(mCanvas, cleanText);
+      mSuccess = true;
+    }
+
+    if (mSuccess) {
+      const mW = mCanvas.width;
+      const mH = mCanvas.height;
+      const mAspect = mW / mH;
+
+      let targetH = qrZoneH * 0.88;
+      let targetW = targetH * mAspect;
+      if (targetW > safeW * 0.90) {
+        targetW = safeW * 0.90;
+        targetH = targetW / mAspect;
+      }
+
+      const qx = safeLeft + (safeW - targetW) / 2;
+      const qy = qrZoneTop + (qrZoneH - targetH) / 2;
+      const cellW = targetW / mW;
+      const cellH = targetH / mH;
+
+      const mCtx = mCanvas.getContext('2d');
+      const imgData = mCtx.getImageData(0, 0, mW, mH).data;
+
+      const barColorRgb = LabelApp.hexToRgb(s.barColor || '#000000') || [0, 0, 0];
+      pdf.setFillColor(barColorRgb[0], barColorRgb[1], barColorRgb[2]);
+
+      // Scan rows and merge contiguous black cells for maximum rendering speed and compact PDF
+      for (let r = 0; r < mH; r++) {
+        let spanStart = -1;
+        for (let c = 0; c < mW; c++) {
+          const idx = (r * mW + c) * 4;
+          const isDark = (imgData[idx + 3] > 128) && ((imgData[idx] + imgData[idx + 1] + imgData[idx + 2]) < 384);
+
+          if (isDark) {
+            if (spanStart === -1) spanStart = c;
+          } else {
+            if (spanStart !== -1) {
+              const spanLen = c - spanStart;
+              pdf.rect(qx + spanStart * cellW, qy + r * cellH, spanLen * cellW, cellH, 'F');
+              spanStart = -1;
+            }
+          }
+        }
+        if (spanStart !== -1) {
+          const spanLen = mW - spanStart;
+          pdf.rect(qx + spanStart * cellW, qy + r * cellH, spanLen * cellW, cellH, 'F');
+        }
+      }
+    }
+  } else {
+    // 1D Barcode Vector
+    const bCanvas = document.createElement('canvas');
+    try {
+      JsBarcode(bCanvas, cleanText, {
+        format: format,
+        displayValue: false,
+        lineColor: '#000000',
+        background: '#ffffff',
+        margin: 0,
+        width: 1,
+        height: 50
+      });
+      if (bCanvas.width > 0) {
+        const bW = bCanvas.width;
+        const bCtx = bCanvas.getContext('2d');
+        const bData = bCtx.getImageData(0, 0, bW, 1).data;
+
+        const maxCodeW = labelW * ((s.barcodeWidthRatio || 90) / 100);
+        const maxCodeH = labelH * ((s.barcodeHeightRatio || 70) / 100);
+        const targetW = maxCodeW;
+        const targetH = maxCodeH;
+        const colW = targetW / bW;
+        const bx = posX + (labelW - targetW) / 2;
+        const by = posY + (labelH - targetH) / 2;
+
+        const barColorRgb = LabelApp.hexToRgb(s.barColor || '#000000') || [0, 0, 0];
+        pdf.setFillColor(barColorRgb[0], barColorRgb[1], barColorRgb[2]);
+
+        let spanStart = -1;
+        for (let c = 0; c < bW; c++) {
+          const idx = c * 4;
+          const isDark = (bData[idx + 3] > 128) && ((bData[idx] + bData[idx + 1] + bData[idx + 2]) < 384);
+          if (isDark) {
+            if (spanStart === -1) spanStart = c;
+          } else {
+            if (spanStart !== -1) {
+              pdf.rect(bx + spanStart * colW, by, (c - spanStart) * colW, targetH, 'F');
+              spanStart = -1;
+            }
+          }
+        }
+        if (spanStart !== -1) {
+          pdf.rect(bx + spanStart * colW, by, (bW - spanStart) * colW, targetH, 'F');
+        }
+      }
+    } catch (e) {
+      console.warn('1D barcode vector error:', e);
+    }
+  }
+
+  // 6. Draw Vector Header Text
+  if (hasText) {
+    const textColorRgb = LabelApp.hexToRgb(s.textColor || '#000000') || [0, 0, 0];
+    pdf.setTextColor(textColorRgb[0], textColorRgb[1], textColorRgb[2]);
+
+    const isMono = (s.fontFamily === 'JetBrains Mono' || s.fontFamily === 'Roboto Mono');
+    const isBold = (parseInt(s.fontWeight, 10) >= 700);
+    pdf.setFont(isMono ? 'courier' : 'helvetica', isBold ? 'bold' : 'normal');
+
+    // Font size: CSS px → PDF points (1px @ 96dpi ≈ 0.75 pt)
+    const basePt = (s.fontSize || 40) * 0.75;
+    const maxPt = (textZoneH * 72) * 0.82;
+    let fontPt = Math.max(6, Math.min(basePt, maxPt));
+    pdf.setFontSize(fontPt);
+
+    // CRITICAL: PDF is unit:'in'. Letter-spacing UI value is CSS px → inches = /96.
+    // Never use setCharSpace(px*0.75) here — that treated ~2" gaps between letters.
+    const charSpaceIn = Math.max(0, (s.letterSpacing || 0) / 96);
+    const centerX = safeLeft + safeW / 2;
+    const textY = textZoneTop + textZoneH / 2;
+    const maxTextW = safeW * 0.94;
+
+    let measuredW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, titleText, charSpaceIn);
+    if (measuredW > maxTextW && measuredW > 0) {
+      fontPt = Math.max(6, fontPt * (maxTextW / measuredW));
+      pdf.setFontSize(fontPt);
+    }
+
+    // Reset any leftover charSpace from prior draws
+    if (typeof pdf.setCharSpace === 'function') {
+      pdf.setCharSpace(0);
+    }
+
+    LabelApp.CodeEngine.drawPdfTextWithSpacing(pdf, titleText, centerX, textY, charSpaceIn, {
+      baseline: 'middle'
+    });
+  }
+};
+

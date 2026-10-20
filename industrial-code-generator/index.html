@@ -429,9 +429,9 @@
             <div class="field">
               <label>Roll Media / Press Preset</label>
               <select id="rollMediaPreset" onchange="handleRollMediaChange()">
-                <option value="3ft" selected>★ 3 Feet Roll (36" / 914 mm — 6 Cols for 6×3")</option>
-                <option value="4ft">★ 4 Feet Roll (48" / 1219 mm — 8 Cols for 6×3")</option>
-                <option value="2ft">2 Feet Roll (24" / 610 mm — 4 Cols for 6×3")</option>
+                <option value="4ft" selected>★ 4 Feet Roll (48" / 1219 mm — 16 Cols for 3" Pallet Code)</option>
+                <option value="3ft">★ 3 Feet Roll (36" / 914 mm — 12 Cols for 3" Pallet Code)</option>
+                <option value="2ft">2 Feet Roll (24" / 610 mm — 8 Cols for 3" Pallet Code)</option>
                 <option value="custom-cols">Custom Column Count (1 to 24 Columns)</option>
                 <option value="sheet-a4">A4 Paper Grid (210 × 297 mm)</option>
                 <option value="sheet-a3">A3 Paper Grid (297 × 420 mm)</option>
@@ -439,24 +439,29 @@
             </div>
             <div class="field small">
               <label>Columns</label>
-              <input type="number" id="pdfColumns" value="6" min="1" max="24" onchange="syncPdfColumns()">
+              <input type="number" id="pdfColumns" value="16" min="1" max="24" onchange="syncPdfColumns()">
             </div>
           </div>
 
           <div class="row tight">
             <div class="field">
+              <label>Roll Chunk / Segment Size (প্রতি রোলে লেবেল সংখ্যা)</label>
+              <select id="rollChunkSize" onchange="updateRollEstimate()">
+                <option value="1000" selected>★ 1,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
+                <option value="2000">★ 2,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
+                <option value="500">500 Labels / Part (~ Short Run / Table Cutter)</option>
+                <option value="all">All Labels (still auto-splits at PDF 200&quot; page height limit)</option>
+              </select>
+            </div>
+            <div class="field">
               <label>Inter-Label Gap (Inches)</label>
               <input type="number" id="labelGap" value="0.0" step="0.05" min="0" max="2.0">
             </div>
-            <div class="field">
-              <label>Roll Page Format</label>
-              <select id="rollPageFormat">
-                <option value="continuous" selected>Single Continuous Roll (1 Long Page)</option>
-                <option value="paginated-5">Paginated (5 Rows Per Page)</option>
-                <option value="paginated-10">Paginated (10 Rows Per Page)</option>
-                <option value="paginated-20">Paginated (20 Rows Per Page)</option>
-              </select>
-            </div>
+          </div>
+
+          <div id="rollEstimateBox" style="background:#FFFFFF; border:1px solid var(--border); padding:8px 12px; margin-bottom:8px; border-radius:3px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:600; color:var(--ink-soft);">Roll Output Summary:</span>
+            <span id="rollEstimateNote" style="font-family:var(--mono); font-size:12px; font-weight:700; color:var(--brand-blue);">Calculating...</span>
           </div>
 
           <div class="row tight" style="margin-top:6px; margin-bottom:0;">
@@ -472,11 +477,11 @@
         <div class="row tight">
           <div class="field small">
             <label>Row From</label>
-            <input type="number" id="rangeStartInput" value="1" min="1">
+            <input type="number" id="rangeStartInput" value="1" min="1" oninput="updateRollEstimate()">
           </div>
           <div class="field small">
             <label>Row To</label>
-            <input type="number" id="rangeEndInput" value="500" min="1">
+            <input type="number" id="rangeEndInput" value="500" min="1" oninput="updateRollEstimate()">
           </div>
           <div class="field">
             <label>Master Export DPI</label>
