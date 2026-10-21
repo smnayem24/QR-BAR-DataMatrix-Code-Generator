@@ -66,11 +66,40 @@ body {
     padding-bottom: 12px;
   }
 
+  .main-view {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #studioMainView {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #studioMainView .layout-grid,
   .layout-grid {
     flex: 1;
     min-height: 0;
+    height: 100%;
     display: grid;
     grid-template-columns: 460px minmax(0, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  #calcMainView {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 440px minmax(0, 1fr);
     gap: 24px;
     align-items: stretch;
     overflow: hidden;
@@ -954,11 +983,164 @@ details[open] summary::after {
   line-height: 1.4;
 }
 
+/* ================= TOP NAVIGATION TABS ================= */
+.top-nav-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: #EBE7DD;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.nav-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.nav-tab-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-tab-btn.active {
+  background: #FFFFFF;
+  color: var(--brand-blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.nav-tab-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* ================= MAIN VIEW CONTAINERS ================= */
+.main-view {
+  flex: 1;
+  min-height: 0;
+}
+
+#calcMainView {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 440px minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.calc-sidebar {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.calc-content {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Stat Cards */
+.calc-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.calc-stat-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-stat-card .val {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.calc-stat-card .lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calc-stat-card.accent {
+  border-color: var(--brand-blue);
+  background: #F8FAFC;
+}
+
+.calc-stat-card.accent .val {
+  color: var(--brand-blue);
+}
+
+/* Schedule Table */
+.calc-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.calc-schedule-table th {
+  background: #F1EFEA;
+  color: var(--ink);
+  padding: 9px 12px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+
+.calc-schedule-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink);
+}
+
+.calc-schedule-table tr:hover td {
+  background: #FBF9F4;
+}
+
 /* ================= FOOTER ================= */
 footer {
   text-align: center;
   color: var(--ink-soft);
   font-size: 12px;
-  margin-top: 40px;
+  margin-top: 14px;
   font-family: var(--mono);
 }

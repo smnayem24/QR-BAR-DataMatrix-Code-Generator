@@ -110,6 +110,12 @@ window.addEventListener('DOMContentLoaded', () => {
   if (LabelApp.updateRollEstimate) {
     LabelApp.updateRollEstimate();
   }
+
+  // 6. Initialize Calculator & Gang-Sheet Planner
+  if (LabelApp.Calculator && LabelApp.Calculator.syncFromStudio) {
+    LabelApp.Calculator.syncFromStudio();
+    LabelApp.Calculator.calculate();
+  }
 });
 
 // ==========================================================================

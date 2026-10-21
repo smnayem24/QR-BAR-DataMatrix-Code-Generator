@@ -31,7 +31,22 @@
     </div>
   </header>
 
-  <div class="layout-grid">
+  <!-- TOP NAVIGATION TABS -->
+  <div class="top-nav-bar">
+    <button class="nav-tab-btn active" id="btnViewStudio" onclick="switchMainView('studio')">
+      <span style="font-size:16px;">🏷️</span>
+      <span>Label Studio &amp; Generator</span>
+    </button>
+    <button class="nav-tab-btn" id="btnViewCalc" onclick="switchMainView('calc')">
+      <span style="font-size:16px;">🧮</span>
+      <span>Roll Gang-Sheet Calculator &amp; Batch Planner</span>
+      <span class="nav-tab-badge">ZERO-WASTE</span>
+    </button>
+  </div>
+
+  <!-- MAIN VIEW 1: STUDIO & GENERATOR -->
+  <div id="studioMainView" class="main-view active">
+    <div class="layout-grid">
 
     <!-- LEFT COLUMN: CONTROLS & SETTINGS -->
     <div class="controls-col">
@@ -447,8 +462,9 @@
             <div class="field">
               <label>Roll Chunk / Segment Size (প্রতি রোলে লেবেল সংখ্যা)</label>
               <select id="rollChunkSize" onchange="updateRollEstimate()">
-                <option value="1000" selected>★ 1,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
-                <option value="2000">★ 2,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
+                <option value="auto-full-rows" selected>★ Smart Zero-Waste Full Rows (Auto-fits complete rows under 200" limit)</option>
+                <option value="1000">1,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
+                <option value="2000">2,000 Labels / Part (auto-splits if taller than PDF 200&quot; max)</option>
                 <option value="500">500 Labels / Part (~ Short Run / Table Cutter)</option>
                 <option value="all">All Labels (still auto-splits at PDF 200&quot; page height limit)</option>
               </select>
@@ -463,6 +479,11 @@
             <span style="font-size:12px; font-weight:600; color:var(--ink-soft);">Roll Output Summary:</span>
             <span id="rollEstimateNote" style="font-family:var(--mono); font-size:12px; font-weight:700; color:var(--brand-blue);">Calculating...</span>
           </div>
+
+          <button class="btn-ghost btn-small" type="button" onclick="switchMainView('calc')" style="width:100%; margin-bottom:8px; border:1px dashed var(--brand-blue); color:var(--brand-blue); font-weight:700; background:#F0F6FF; padding:8px 12px; border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <span>🧮</span>
+            <span>Open Zero-Waste Roll Gang-Sheet Planner &amp; Schedule &rarr;</span>
+          </button>
 
           <div class="row tight" style="margin-top:6px; margin-bottom:0;">
             <div class="field wide">
@@ -576,11 +597,185 @@
         <div class="preview-container">
           <div class="barcode-sheet-grid" id="barcodeGrid"></div>
         </div>
+      </div> <!-- /.panel -->
+
+    </div> <!-- /.preview-col -->
+
+  </div> <!-- /.layout-grid -->
+</div> <!-- /#studioMainView -->
+
+<!-- MAIN VIEW 2: INDUSTRIAL GANG-SHEET CALCULATOR & BATCH PLANNER -->
+  <div id="calcMainView" class="main-view" style="display:none;">
+    
+    <!-- LEFT SIDEBAR: CALCULATOR CONTROLS -->
+    <div class="calc-sidebar">
+      
+      <div class="panel">
+        <h2>1 &middot; Production Order &amp; Label Specs <span class="tag">SYNCED</span></h2>
+        
+        <div class="row tight">
+          <div class="field wide">
+            <label>Total Order Quantity (মোট কোড সংখ্যা)</label>
+            <input type="number" id="calcTotalOrder" value="20000" min="1" step="100" oninput="LabelApp.Calculator.calculate()">
+            <div class="desc">e.g. 20,000 labels for massive warehouse pallet run</div>
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Label Width (Inches)</label>
+            <input type="number" id="calcLabelW" value="3.0" step="0.1" min="0.5" oninput="LabelApp.Calculator.calculate()">
+          </div>
+          <div class="field">
+            <label>Label Height (Inches)</label>
+            <input type="number" id="calcLabelH" value="3.5" step="0.1" min="0.5" oninput="LabelApp.Calculator.calculate()">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>2 &middot; Press Media &amp; Run Constraints <span class="tag">ZERO-WASTE</span></h2>
+
+        <div class="row tight">
+          <div class="field wide">
+            <label>Roll Media / Press Width Preset</label>
+            <select id="calcRollPreset" onchange="LabelApp.Calculator.onRollPresetChange()">
+              <option value="4ft" selected>★ 4 Feet Roll (48" / 1219 mm Wide)</option>
+              <option value="3ft">★ 3 Feet Roll (36" / 914 mm Wide)</option>
+              <option value="2ft">2 Feet Roll (24" / 610 mm Wide)</option>
+              <option value="1000mm">1000 mm Roll (39.37" Wide)</option>
+              <option value="custom">Custom Roll Width &rarr;</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="calcCustomRollWrap" class="row tight" style="display:none;">
+          <div class="field wide">
+            <label>Custom Roll Width (Inches)</label>
+            <input type="number" id="calcRollWidth" value="48.0" step="0.5" min="2.0" oninput="LabelApp.Calculator.calculate()">
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field wide">
+            <label>Max Page / Roll Height per Part (ফাইল সাইজ ক্যাপ)</label>
+            <select id="calcHeightPreset" onchange="LabelApp.Calculator.onHeightPresetChange()">
+              <option value="pdf-200" selected>★ Standard PDF 200" Max (~16.6 ft / 5.1m — 1 Single Page)</option>
+              <option value="15ft">15 Feet (~180" / 4.6m — Standard Press Table)</option>
+              <option value="10ft">10 Feet (~120" / 3.0m — Short Run / Table Cutter)</option>
+              <option value="5m">5.0 Meters (~196.8" — Metric Roll Cut)</option>
+              <option value="custom">Custom Height Limit &rarr;</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="calcCustomHeightWrap" class="row tight" style="display:none;">
+          <div class="field wide">
+            <label>Custom Height Limit (Inches)</label>
+            <input type="number" id="calcMaxHeight" value="199.5" step="1.0" min="12.0" oninput="LabelApp.Calculator.calculate()">
+          </div>
+        </div>
+
+        <div class="row tight">
+          <div class="field">
+            <label>Edge Margin for Pinch Rollers</label>
+            <input type="number" id="calcSideMargin" value="0.0" step="0.25" min="0" max="4.0" oninput="LabelApp.Calculator.calculate()">
+          </div>
+          <div class="field">
+            <label>Inter-Label Gap (Inches)</label>
+            <input type="number" id="calcGap" value="0.0" step="0.05" min="0" max="1.0" oninput="LabelApp.Calculator.calculate()">
+          </div>
+        </div>
+
+        <button class="btn-ghost" type="button" onclick="LabelApp.Calculator.applyAllToStudio()" style="width:100%; margin-top:10px; font-weight:700;">
+          🔁 Sync Calculator Settings to Studio
+        </button>
       </div>
 
     </div>
 
-  </div>
+    <!-- RIGHT CONTENT: DASHBOARD & SCHEDULE TABLE -->
+    <div class="calc-content">
+      
+      <!-- 4 KEY KPI BADGES -->
+      <div class="calc-stat-cards">
+        <div class="calc-stat-card accent">
+          <div class="lbl">Best Fit Grid</div>
+          <div class="val" id="calcStatCols">16 Cols</div>
+        </div>
+        <div class="calc-stat-card">
+          <div class="lbl">Width Utilization</div>
+          <div class="val" id="calcStatUtil">100%</div>
+        </div>
+        <div class="calc-stat-card accent">
+          <div class="lbl">Zero-Waste Batch Size</div>
+          <div class="val" id="calcStatBatch">912 Labels</div>
+        </div>
+        <div class="calc-stat-card">
+          <div class="lbl">Total PDF Files</div>
+          <div class="val" id="calcStatParts">22 Files</div>
+        </div>
+      </div>
+
+      <!-- ROLL CROSS-SECTION VISUALIZER -->
+      <div class="panel" style="padding:14px 18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <h3 style="margin:0; font-size:13.5px; text-transform:uppercase; letter-spacing:0.5px; font-family:var(--mono);">
+            Roll Media Cross-Section Utilization Visualizer
+          </h3>
+          <span id="calcStatLength" style="font-family:var(--mono); font-weight:700; color:var(--brand-blue); font-size:12.5px;">
+            ~365 ft (111m) Material Req.
+          </span>
+        </div>
+        
+        <!-- VISUAL BAR -->
+        <div id="calcVisRollBar" style="width:100%; height:34px; border-radius:4px; overflow:hidden; display:flex; border:1px solid var(--border); background:#F8FAFC; margin-bottom:6px;">
+        </div>
+        
+        <div id="calcVisMeta" style="font-size:11.5px; color:var(--ink-soft); font-family:var(--mono);">
+          Loading roll utilization specs...
+        </div>
+      </div>
+
+      <!-- BATCH SCHEDULE TABLE -->
+      <div class="panel" style="flex:1; display:flex; flex-direction:column; min-height:0; padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h3 style="margin:0; font-size:15px;">Zero-Waste Production Batch Schedule</h3>
+            <div class="desc" style="margin:2px 0 0;">
+              Every part snaps to 100% complete rows under 200" limit. Zero blank spaces, zero material wastage.
+            </div>
+          </div>
+          <div>
+            <button class="btn-primary btn-small" id="btnExportAllCalc" onclick="LabelApp.Calculator.exportAllPartsSequentially()" style="font-weight:700;">
+              🏭 One-Click Export Entire Order in Zero-Waste Parts
+            </button>
+          </div>
+        </div>
+
+        <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:3px;">
+          <table class="calc-schedule-table">
+            <thead>
+              <tr>
+                <th>Part #</th>
+                <th>Label Range</th>
+                <th>Quantity</th>
+                <th>Layout</th>
+                <th>Length</th>
+                <th>Wastage Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="calcScheduleTbody">
+              <!-- Dynamically populated by js/calculator.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div> <!-- /#calcMainView -->
 
   <footer>
     Industrial Code &amp; Label Master Press System &bull; High Precision Vector &amp; Thermal Printing Architecture &bull; Client Ready
@@ -602,6 +797,7 @@
 <script src="js/data-input.js"></script>
 <script src="js/preview.js"></script>
 <script src="js/exporter.js"></script>
+<script src="js/calculator.js"></script>
 <script src="js/app.js"></script>
 
 </body>

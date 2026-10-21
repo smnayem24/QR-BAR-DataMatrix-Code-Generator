@@ -216,18 +216,20 @@ LabelApp.exportPDF = async function() {
     const labelH = dims.heightIn;
 
     const rollChunkSelect = document.getElementById('rollChunkSize');
-    const chunkSizeVal = rollChunkSelect ? rollChunkSelect.value : '1000';
-    const userChunkLimit = (chunkSizeVal === 'all') ? total : (parseInt(chunkSizeVal, 10) || 1000);
-
-    // Cap by PDF MediaBox height so the bottom of the roll is never clipped
+    const chunkSizeVal = rollChunkSelect ? rollChunkSelect.value : 'auto-full-rows';
     const heightSafeLimit = LabelApp.getMaxLabelsPerPdfPage(cols, labelH, gapIn);
-    const chunkLimit = Math.min(userChunkLimit, heightSafeLimit);
 
-    if (userChunkLimit > heightSafeLimit && progressNote) {
-      const maxRows = Math.floor(heightSafeLimit / cols);
-      const maxH = (maxRows * labelH + Math.max(0, maxRows - 1) * gapIn).toFixed(1);
-      progressNote.textContent = `PDF page max is ${LabelApp.PDF_MAX_PAGE_IN}" tall — auto-splitting into parts of ≤${heightSafeLimit} labels (~${maxH}" / part)...`;
-      await LabelApp.yieldFrame();
+    let chunkLimit;
+    if (chunkSizeVal === 'auto-full-rows') {
+      // Snap directly to maximum zero-waste full rows under PDF 200" limit
+      chunkLimit = heightSafeLimit;
+    } else if (chunkSizeVal === 'all') {
+      chunkLimit = Math.min(total, heightSafeLimit);
+    } else {
+      // User specified e.g. 1000, 2000, 500: snap to full rows so no incomplete rows exist
+      const rawTarget = parseInt(chunkSizeVal, 10) || 1000;
+      const targetRows = Math.max(1, Math.round(rawTarget / cols));
+      chunkLimit = Math.min(targetRows * cols, heightSafeLimit);
     }
 
     const numChunks = Math.ceil(total / chunkLimit);
@@ -407,10 +409,19 @@ LabelApp.updateRollEstimate = function() {
   const labelH = dims.heightIn || 3.5;
 
   const chunkSelect = document.getElementById('rollChunkSize');
-  const chunkVal = chunkSelect ? chunkSelect.value : '1000';
-  const userChunk = (chunkVal === 'all') ? count : (parseInt(chunkVal, 10) || 1000);
+  const chunkVal = chunkSelect ? chunkSelect.value : 'auto-full-rows';
   const heightSafeLimit = LabelApp.getMaxLabelsPerPdfPage(cols, labelH, gapIn);
-  const chunkLimit = Math.min(userChunk || 1, heightSafeLimit);
+
+  let chunkLimit;
+  if (chunkVal === 'auto-full-rows') {
+    chunkLimit = heightSafeLimit;
+  } else if (chunkVal === 'all') {
+    chunkLimit = Math.min(count, heightSafeLimit);
+  } else {
+    const rawTarget = parseInt(chunkVal, 10) || 1000;
+    const targetRows = Math.max(1, Math.round(rawTarget / cols));
+    chunkLimit = Math.min(targetRows * cols, heightSafeLimit);
+  }
 
   const numFiles = Math.max(1, Math.ceil(count / chunkLimit));
   const labelsPerRoll = Math.min(count, chunkLimit);
