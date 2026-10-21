@@ -1,0 +1,19 @@
+{
+  "name": "industrial-label-suite",
+  "version": "4.0.0",
+  "description": "Industrial Code & Label Generator PRO - Master Roll Gang Sheet & Pure Vector Engine",
+  "private": true,
+  "scripts": {
+    "build": "node build-env.js"
+  },
+  "keywords": [
+    "barcode",
+    "datamatrix",
+    "qrcode",
+    "industrial-labels",
+    "vector-pdf",
+    "roll-calculator"
+  ],
+  "author": "Din Islam",
+  "license": "ISC"
+}

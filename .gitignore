@@ -1,0 +1,13 @@
+# Environment files containing sensitive credentials
+.env
+*.env
+.env.local
+.env.*.local
+industrial-code-generator/.env
+industrial-code-generator/js/env.js
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

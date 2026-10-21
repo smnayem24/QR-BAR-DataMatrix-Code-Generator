@@ -31,17 +31,30 @@
     </div>
   </header>
 
-  <!-- TOP NAVIGATION TABS -->
+  <!-- TOP NAVIGATION TABS & OPERATOR STATUS -->
   <div class="top-nav-bar">
-    <button class="nav-tab-btn active" id="btnViewStudio" onclick="switchMainView('studio')">
-      <span style="font-size:16px;">🏷️</span>
-      <span>Label Studio &amp; Generator</span>
-    </button>
-    <button class="nav-tab-btn" id="btnViewCalc" onclick="switchMainView('calc')">
-      <span style="font-size:16px;">🧮</span>
-      <span>Roll Gang-Sheet Calculator &amp; Batch Planner</span>
-      <span class="nav-tab-badge">ZERO-WASTE</span>
-    </button>
+    <div style="display:flex; gap:8px; flex:1;">
+      <button class="nav-tab-btn active" id="btnViewStudio" onclick="switchMainView('studio')">
+        <span style="font-size:16px;">🏷️</span>
+        <span>Label Studio &amp; Generator</span>
+      </button>
+      <button class="nav-tab-btn" id="btnViewCalc" onclick="switchMainView('calc')">
+        <span style="font-size:16px;">🧮</span>
+        <span>Roll Gang-Sheet Calculator &amp; Batch Planner</span>
+        <span class="nav-tab-badge">ZERO-WASTE</span>
+      </button>
+    </div>
+
+    <!-- Authenticated Operator Info & Logout -->
+    <div class="auth-status-bar" id="authStatusBar" style="display:none;">
+      <div class="user-pill">
+        <span class="online-dot"></span>
+        <span id="authEmailDisplay">Operator</span>
+      </div>
+      <button class="btn-logout" onclick="LabelApp.Auth.logout()" title="Sign Out">
+        🚪 Sign Out
+      </button>
+    </div>
   </div>
 
   <!-- MAIN VIEW 1: STUDIO & GENERATOR -->
@@ -781,6 +794,69 @@
     Industrial Code &amp; Label Master Press System &bull; High Precision Vector &amp; Thermal Printing Architecture &bull; Client Ready
   </footer>
 
+</div> <!-- /.wrap -->
+
+<!-- FIREBASE AUTHENTICATION & WHITELIST LOCK OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-card" id="authCard">
+    
+    <div class="auth-header">
+      <div class="auth-badge">🔒 RESTRICTED ENTERPRISE TERMINAL</div>
+      <h2 class="auth-title">Industrial Code Generator</h2>
+      <p class="auth-subtitle">Operator Authentication &bull; Whitelist Protected</p>
+    </div>
+
+    <!-- Banner if Firebase config is still using placeholders -->
+    <div class="auth-dev-banner" id="authConfigBanner" style="display:none;">
+      <strong>⚠️ Firebase Setup Notice:</strong><br>
+      Live Cloud Auth requires your Firebase Project keys in <code>js/auth.js</code>.
+      <div style="margin-top:8px;">
+        <button type="button" class="btn-ghost btn-small" onclick="LabelApp.Auth.bypassLocal()" style="background:#FFFFFF; color:#C2410C; border:1px solid #EA580C; padding:4px 8px; font-weight:700; cursor:pointer;">
+          🚀 Bypass for Local Dev Preview
+        </button>
+      </div>
+    </div>
+
+    <!-- 1-Click Google Sign In -->
+    <button type="button" class="btn-google-auth" id="btnGoogleAuth" onclick="LabelApp.Auth.loginWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.665-5.17 3.665-9.09z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.29 21.46 7.37 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.32c-.25-.72-.38-1.49-.38-2.32s.13-1.6.38-2.32V6.59H1.26C.46 8.18 0 9.99 0 12s.46 3.82 1.26 5.41l4.02-3.09z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.54 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/>
+      </svg>
+      <span>Sign In with Google</span>
+    </button>
+
+    <div class="auth-divider">
+      <span>OR USE EMAIL</span>
+    </div>
+
+    <!-- Email / Password Form -->
+    <form onsubmit="event.preventDefault(); LabelApp.Auth.loginWithEmail();">
+      <div class="auth-field">
+        <label>Operator Email</label>
+        <input type="email" id="authEmailInput" placeholder="name@company.com" autocomplete="username">
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="authPassInput" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn-auth-submit" style="margin-top:16px;">
+        Sign In
+      </button>
+    </form>
+
+    <!-- Status / Error Notification Box -->
+    <div id="authStatusBox" class="auth-status-box"></div>
+
+    <div class="auth-footer-notice">
+      <span>🛡️ Strictly restricted to whitelisted administrator accounts.</span>
+    </div>
+
+  </div>
 </div>
 
 <!-- EXTERNAL LIBRARIES -->
@@ -791,8 +867,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<!-- FIREBASE COMPAT SDK (OFFICIAL GOOGLE CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
 <!-- MODULAR APPLICATION SCRIPTS (LOADED IN ORDER) -->
 <script src="js/state.js"></script>
+<script src="js/env.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/renderers/code-engine.js"></script>
 <script src="js/data-input.js"></script>
 <script src="js/preview.js"></script>
