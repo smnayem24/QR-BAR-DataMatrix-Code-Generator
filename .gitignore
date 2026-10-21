@@ -1,9 +1,9 @@
 # Environment files containing sensitive credentials
 .env
+*.env
 .env.local
 .env.*.local
-
-# Auto-generated client environment file
+industrial-code-generator/.env
 industrial-code-generator/js/env.js
 
 # OS & Editor files

@@ -89,6 +89,12 @@ LabelApp.generateData = function() {
 
   state.currentSelectedIndex = 0;
   state.gridCurrentPage = 0;
+
+  const endInput = document.getElementById('rangeEndInput');
+  if (endInput && state.generatedItems.length > 0) {
+    endInput.value = state.generatedItems.length;
+  }
+
   LabelApp.updateStats();
   if (LabelApp.renderPreview) {
     LabelApp.renderPreview();

@@ -85,6 +85,7 @@ LabelApp.setRangePreset = function(start, end) {
   const endInput = document.getElementById('rangeEndInput');
   if (startInput) startInput.value = start;
   if (endInput) endInput.value = (end === 'all') ? total : Math.min(total, end);
+  if (LabelApp.updateRollEstimate) LabelApp.updateRollEstimate();
 };
 
 /**
@@ -104,6 +105,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 4. Default code type
   LabelApp.setCodeType('barcode');
+
+  // 5. Update Roll Output summary estimate
+  if (LabelApp.updateRollEstimate) {
+    LabelApp.updateRollEstimate();
+  }
+
+  // 6. Initialize Calculator & Gang-Sheet Planner
+  if (LabelApp.Calculator && LabelApp.Calculator.syncFromStudio) {
+    LabelApp.Calculator.syncFromStudio();
+    LabelApp.Calculator.calculate();
+  }
 });
 
 // ==========================================================================
@@ -136,5 +148,6 @@ window.downloadCSVData = LabelApp.downloadCSVData;
 window.togglePdfMode = LabelApp.togglePdfMode;
 window.handleRollMediaChange = LabelApp.handleRollMediaChange;
 window.syncPdfColumns = LabelApp.syncPdfColumns;
+window.updateRollEstimate = LabelApp.updateRollEstimate;
 window.setCodeType = LabelApp.setCodeType;
 window.setRangePreset = LabelApp.setRangePreset;

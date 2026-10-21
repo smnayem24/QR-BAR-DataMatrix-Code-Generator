@@ -158,7 +158,26 @@ LabelApp.downloadAllZIP = async function(formatType) {
 };
 
 /**
+ * PDF ISO 32000 MediaBox max ≈ 14,400 pt = 200 inches.
+ * Taller pages get clipped by viewers (looks "incomplete" at the bottom).
+ */
+LabelApp.PDF_MAX_PAGE_IN = 200;
+
+/**
+ * Max labels that fit on one PDF page without exceeding MediaBox height.
+ */
+LabelApp.getMaxLabelsPerPdfPage = function(cols, labelH, gapIn) {
+  const maxH = LabelApp.PDF_MAX_PAGE_IN;
+  const pitch = (labelH || 1) + (gapIn || 0);
+  const maxRows = Math.max(1, Math.floor((maxH + (gapIn || 0)) / pitch));
+  return maxRows * Math.max(1, cols || 1);
+};
+
+/**
  * Master PDF Exporter: Multi-Column Roll Gang Sheet or 1-Up Zebra Roll
+ * Uses 100% Pure Vector rendering to eliminate browser crashes and RAM overflow!
+ * Includes Smart Roll Chunking (e.g. 1,000 / 2,000 labels per file) for press safety.
+ * Also auto-splits when page height would exceed the PDF 200" MediaBox limit.
  */
 LabelApp.exportPDF = async function() {
   const allItems = LabelApp.state.generatedItems;
@@ -175,11 +194,10 @@ LabelApp.exportPDF = async function() {
   if (startIdx > endIdx) startIdx = 0;
 
   const items = allItems.slice(startIdx, endIdx + 1);
+  const total = items.length;
 
   const { jsPDF } = window.jspdf;
   const pdfMode = document.getElementById('pdfMode').value;
-  const dpi = parseInt(document.getElementById('exportDpi').value) || 300;
-  const total = items.length;
   const dims = LabelApp.state.currentDimensions;
   const s = LabelApp.getUserSettings();
 
@@ -192,66 +210,73 @@ LabelApp.exportPDF = async function() {
   // MODE 1: MASTER GANG SHEET / ROLL PDF (MULTI-COLUMN FOR PRESS)
   // -------------------------------------------------------------
   if (pdfMode === 'master-roll') {
-    const cols = Math.max(1, parseInt(document.getElementById('pdfColumns').value) || 6);
+    const cols = Math.max(1, parseInt(document.getElementById('pdfColumns').value) || 16);
     const gapIn = parseFloat(document.getElementById('labelGap').value) || 0;
-    const pageFormat = document.getElementById('rollPageFormat').value;
-
     const labelW = dims.widthIn;
     const labelH = dims.heightIn;
 
-    const totalRows = Math.ceil(total / cols);
+    const rollChunkSelect = document.getElementById('rollChunkSize');
+    const chunkSizeVal = rollChunkSelect ? rollChunkSelect.value : 'auto-full-rows';
+    const heightSafeLimit = LabelApp.getMaxLabelsPerPdfPage(cols, labelH, gapIn);
 
-    let rowsPerPage = totalRows;
-    if (pageFormat === 'paginated-5') rowsPerPage = 5;
-    else if (pageFormat === 'paginated-10') rowsPerPage = 10;
-    else if (pageFormat === 'paginated-20') rowsPerPage = 20;
+    let chunkLimit;
+    if (chunkSizeVal === 'auto-full-rows') {
+      // Snap directly to maximum zero-waste full rows under PDF 200" limit
+      chunkLimit = heightSafeLimit;
+    } else if (chunkSizeVal === 'all') {
+      chunkLimit = Math.min(total, heightSafeLimit);
+    } else {
+      // User specified e.g. 1000, 2000, 500: snap to full rows so no incomplete rows exist
+      const rawTarget = parseInt(chunkSizeVal, 10) || 1000;
+      const targetRows = Math.max(1, Math.round(rawTarget / cols));
+      chunkLimit = Math.min(targetRows * cols, heightSafeLimit);
+    }
 
-    const totalPages = Math.ceil(totalRows / rowsPerPage);
-    const sheetWidthIn = Number((cols * labelW + (cols - 1) * gapIn).toFixed(4));
+    const numChunks = Math.ceil(total / chunkLimit);
+    let totalProcessed = 0;
 
-    let pdf = null;
-    let renderedCount = 0;
+    for (let chunkIdx = 0; chunkIdx < numChunks; chunkIdx++) {
+      const chunkStart = chunkIdx * chunkLimit;
+      const chunkEnd = Math.min(total, (chunkIdx + 1) * chunkLimit);
+      const chunkItems = items.slice(chunkStart, chunkEnd);
+      const chunkTotal = chunkItems.length;
 
-    for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
-      const startRow = pageIdx * rowsPerPage;
-      const rowsInThisPage = Math.min(rowsPerPage, totalRows - startRow);
-      const pageHeightIn = Number((rowsInThisPage * labelH + (rowsInThisPage - 1) * gapIn).toFixed(4));
+      const chunkRows = Math.ceil(chunkTotal / cols);
+      const sheetWidthIn = Number((cols * labelW + (cols - 1) * gapIn).toFixed(4));
+      const pageHeightIn = Number((chunkRows * labelH + (chunkRows - 1) * gapIn).toFixed(4));
       const orientation = sheetWidthIn >= pageHeightIn ? 'l' : 'p';
 
-      if (pageIdx === 0) {
-        pdf = new jsPDF({
-          orientation: orientation,
-          unit: 'in',
-          format: [sheetWidthIn, pageHeightIn]
-        });
-      } else {
-        pdf.addPage([sheetWidthIn, pageHeightIn], orientation);
-      }
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: 'in',
+        format: [sheetWidthIn, pageHeightIn],
+        compress: true
+      });
 
-      for (let r = 0; r < rowsInThisPage; r++) {
-        const globalRow = startRow + r;
+      for (let r = 0; r < chunkRows; r++) {
         for (let c = 0; c < cols; c++) {
-          const itemIdx = globalRow * cols + c;
-          if (itemIdx >= total) break;
+          const itemIdx = r * cols + c;
+          if (itemIdx >= chunkTotal) break;
 
-          const item = items[itemIdx];
-          const canvas = LabelApp.CodeEngine.renderLabelToCanvas(item, dims, dpi, s);
-          const imgData = canvas.toDataURL('image/png');
-
+          const item = chunkItems[itemIdx];
           const posX = c * (labelW + gapIn);
           const posY = r * (labelH + gapIn);
 
-          pdf.addImage(imgData, 'PNG', posX, posY, labelW, labelH, undefined, 'FAST');
+          // PURE VECTOR DRAWING — Instant, zero memory leakage!
+          LabelApp.CodeEngine.drawLabelToPDF(pdf, item, dims, posX, posY, s);
 
-          renderedCount++;
-          const pct = Math.round((renderedCount / total) * 100);
+          totalProcessed++;
+          const pct = Math.round((totalProcessed / total) * 100);
           if (progressBar) progressBar.style.width = pct + '%';
-          if (progressNote) progressNote.textContent = `Master Roll: Placing label ${renderedCount}/${total} (Col ${c + 1}/${cols}, Row ${globalRow + 1}/${totalRows})...`;
+          if (progressNote) {
+            progressNote.textContent = `Part ${chunkIdx + 1}/${numChunks}: Rendering label ${itemIdx + 1}/${chunkTotal} (Overall ${totalProcessed}/${total} — ${pct}%)...`;
+          }
 
+          if (itemIdx % 50 === 0) await LabelApp.yieldFrame();
         }
       }
 
-      // Draw Continuous Cut Lines between Rows & Columns on the Master Sheet
+      // Continuous Cut Divider Lines between Rows & Columns on the Master Sheet
       if (s.drawSheetCutLines && s.borderStyle !== 'none') {
         const isDashed = (s.borderStyle === 'dashed');
         const isDark = (s.borderStyle === 'solid-dark');
@@ -270,13 +295,13 @@ LabelApp.exportPDF = async function() {
 
         // Draw vertical cut lines between columns
         for (let c = 1; c < cols; c++) {
-          const cutX = c * labelW + (c - 0.5) * gapIn;
+          const cutX = c * (labelW + gapIn) - gapIn / 2;
           pdf.line(cutX, 0, cutX, pageHeightIn);
         }
 
         // Draw horizontal cut lines between rows
-        for (let r = 1; r < rowsInThisPage; r++) {
-          const cutY = r * labelH + (r - 0.5) * gapIn;
+        for (let r = 1; r < chunkRows; r++) {
+          const cutY = r * (labelH + gapIn) - gapIn / 2;
           pdf.line(0, cutY, sheetWidthIn, cutY);
         }
 
@@ -285,13 +310,22 @@ LabelApp.exportPDF = async function() {
 
         if (pdf.restoreGraphicsState) pdf.restoreGraphicsState();
       }
+
+      if (progressNote) progressNote.textContent = `Saving Part ${chunkIdx + 1} of ${numChunks}...`;
+      await LabelApp.yieldFrame();
+
+      const mediaName = document.getElementById('rollMediaPreset') ? document.getElementById('rollMediaPreset').value : 'roll';
+      const partTag = (numChunks > 1) ? `_part${chunkIdx + 1}_of_${numChunks}_(labels_${startIdx + chunkStart + 1}-${startIdx + chunkEnd})` : '';
+      pdf.save(`master_sheet_${mediaName}_${cols}cols_${dims.widthRaw}x${dims.heightRaw}${partTag}.pdf`);
+
+      if (numChunks > 1 && chunkIdx < numChunks - 1) {
+        await new Promise(r => setTimeout(r, 600)); // Pause so browser doesn't block multi-file downloads
+      }
     }
 
-    if (progressNote) progressNote.textContent = 'Saving Master Roll PDF...';
-    await LabelApp.yieldFrame();
-    const mediaName = document.getElementById('rollMediaPreset').value;
-    pdf.save(`master_sheet_${mediaName}_${cols}cols_${dims.widthRaw}x${dims.heightRaw}_${total}_labels.pdf`);
-    if (progressNote) progressNote.textContent = `Completed! Master Roll PDF (${cols} columns, ${sheetWidthIn}" width) successfully exported.`;
+    if (progressNote) {
+      progressNote.textContent = `Completed! ${total} labels exported across ${numChunks} Vector Master Roll PDF file(s) with zero lag.`;
+    }
   }
   // -------------------------------------------------------------
   // MODE 2: 1-UP SINGLE LABEL ROLL PDF (1 PER PAGE FOR ZEBRA)
@@ -301,29 +335,28 @@ LabelApp.exportPDF = async function() {
     const pdf = new jsPDF({
       orientation: orientation,
       unit: 'in',
-      format: [dims.widthIn, dims.heightIn]
+      format: [dims.widthIn, dims.heightIn],
+      compress: true
     });
 
     for (let i = 0; i < total; i++) {
       if (i > 0) pdf.addPage([dims.widthIn, dims.heightIn], orientation);
 
       const item = items[i];
-      const canvas = LabelApp.CodeEngine.renderLabelToCanvas(item, dims, dpi, s);
-      const imgData = canvas.toDataURL('image/png');
-
-      pdf.addImage(imgData, 'PNG', 0, 0, dims.widthIn, dims.heightIn, undefined, 'FAST');
+      // PURE VECTOR DRAWING — Zero lag!
+      LabelApp.CodeEngine.drawLabelToPDF(pdf, item, dims, 0, 0, s);
 
       const pct = Math.round(((i + 1) / total) * 100);
       if (progressBar) progressBar.style.width = pct + '%';
-      if (progressNote) progressNote.textContent = `1-Up Roll PDF: Building label ${i + 1} of ${total}...`;
+      if (progressNote) progressNote.textContent = `1-Up Vector PDF: Building label ${i + 1} of ${total} (${pct}%)...`;
 
-      if (i % 10 === 0) await LabelApp.yieldFrame();
+      if (i % 50 === 0) await LabelApp.yieldFrame();
     }
 
-    if (progressNote) progressNote.textContent = 'Saving 1-Up PDF document...';
+    if (progressNote) progressNote.textContent = 'Saving 1-Up Vector PDF document...';
     await LabelApp.yieldFrame();
-    pdf.save(`single_labels_1up_${dims.widthRaw}x${dims.heightRaw}_${total}_labels.pdf`);
-    if (progressNote) progressNote.textContent = `Completed! ${total} individual pages exported in PDF.`;
+    pdf.save(`single_labels_vector_1up_${dims.widthRaw}x${dims.heightRaw}_${total}_labels.pdf`);
+    if (progressNote) progressNote.textContent = `Completed! ${total} individual vector pages exported in PDF.`;
   }
 };
 
@@ -351,6 +384,62 @@ LabelApp.togglePdfMode = function() {
   if (settings) {
     settings.style.display = (mode === 'master-roll') ? 'block' : 'none';
   }
+  LabelApp.updateRollEstimate();
+};
+
+/**
+ * Calculate and display real-time Roll Length & File Chunking Estimate
+ */
+LabelApp.updateRollEstimate = function() {
+  const noteEl = document.getElementById('rollEstimateNote');
+  if (!noteEl) return;
+
+  const allItems = LabelApp.state.generatedItems || [];
+  const totalAll = allItems.length || 0;
+  const startInput = document.getElementById('rangeStartInput');
+  const endInput = document.getElementById('rangeEndInput');
+  let startIdx = startInput ? Math.max(0, (parseInt(startInput.value) || 1) - 1) : 0;
+  let endIdx = endInput ? Math.min(totalAll - 1, (parseInt(endInput.value) || totalAll) - 1) : (totalAll > 0 ? totalAll - 1 : 0);
+  if (startIdx > endIdx) startIdx = 0;
+
+  const count = (totalAll > 0) ? (endIdx - startIdx + 1) : 0;
+  const cols = parseInt(document.getElementById('pdfColumns').value) || 16;
+  const gapIn = parseFloat(document.getElementById('labelGap') ? document.getElementById('labelGap').value : 0) || 0;
+  const dims = LabelApp.state.currentDimensions || { heightIn: 3.5, widthIn: 3.0 };
+  const labelH = dims.heightIn || 3.5;
+
+  const chunkSelect = document.getElementById('rollChunkSize');
+  const chunkVal = chunkSelect ? chunkSelect.value : 'auto-full-rows';
+  const heightSafeLimit = LabelApp.getMaxLabelsPerPdfPage(cols, labelH, gapIn);
+
+  let chunkLimit;
+  if (chunkVal === 'auto-full-rows') {
+    chunkLimit = heightSafeLimit;
+  } else if (chunkVal === 'all') {
+    chunkLimit = Math.min(count, heightSafeLimit);
+  } else {
+    const rawTarget = parseInt(chunkVal, 10) || 1000;
+    const targetRows = Math.max(1, Math.round(rawTarget / cols));
+    chunkLimit = Math.min(targetRows * cols, heightSafeLimit);
+  }
+
+  const numFiles = Math.max(1, Math.ceil(count / chunkLimit));
+  const labelsPerRoll = Math.min(count, chunkLimit);
+  const rowsPerRoll = Math.ceil(labelsPerRoll / cols);
+  const lengthIn = rowsPerRoll * labelH + Math.max(0, rowsPerRoll - 1) * gapIn;
+  const lengthFt = (lengthIn / 12).toFixed(1);
+  const lengthM = (lengthIn * 0.0254).toFixed(1);
+  const hitPdfCap = userChunk > heightSafeLimit;
+
+  if (count === 0) {
+    noteEl.textContent = 'No labels loaded';
+  } else if (numFiles === 1) {
+    noteEl.textContent = `~${lengthFt} ft (${lengthM} m) • 1 PDF (${count.toLocaleString()} labels @ ${cols} cols)`;
+  } else if (hitPdfCap) {
+    noteEl.textContent = `~${lengthFt} ft (${lengthM} m)/part • ${numFiles} PDFs (PDF max ${LabelApp.PDF_MAX_PAGE_IN}" → ≤${heightSafeLimit} labels/file)`;
+  } else {
+    noteEl.textContent = `~${lengthFt} ft (${lengthM} m) per roll • ${numFiles} PDF Files (${count.toLocaleString()} labels total)`;
+  }
 };
 
 /**
@@ -359,30 +448,32 @@ LabelApp.togglePdfMode = function() {
 LabelApp.handleRollMediaChange = function() {
   const preset = document.getElementById('rollMediaPreset').value;
   const colInput = document.getElementById('pdfColumns');
-  const labelWidth = LabelApp.state.currentDimensions.widthIn || 6;
+  const labelWidth = LabelApp.state.currentDimensions.widthIn || 3.0;
 
-  if (preset === '3ft') {
-    colInput.value = Math.max(1, Math.floor(36 / labelWidth)) || 6;
-  } else if (preset === '4ft') {
-    colInput.value = Math.max(1, Math.floor(48 / labelWidth)) || 8;
+  if (preset === '4ft') {
+    colInput.value = Math.max(1, Math.floor(48 / labelWidth)) || 16;
+  } else if (preset === '3ft') {
+    colInput.value = Math.max(1, Math.floor(36 / labelWidth)) || 12;
   } else if (preset === '2ft') {
-    colInput.value = Math.max(1, Math.floor(24 / labelWidth)) || 4;
+    colInput.value = Math.max(1, Math.floor(24 / labelWidth)) || 8;
   } else if (preset === 'sheet-a4') {
-    colInput.value = Math.max(1, Math.floor(8.27 / labelWidth)) || 1;
+    colInput.value = Math.max(1, Math.floor(8.27 / labelWidth)) || 2;
   } else if (preset === 'sheet-a3') {
-    colInput.value = Math.max(1, Math.floor(11.69 / labelWidth)) || 2;
+    colInput.value = Math.max(1, Math.floor(11.69 / labelWidth)) || 3;
   }
   LabelApp.syncPdfColumns();
+  LabelApp.updateRollEstimate();
 };
 
 /**
  * Sync PDF Columns with Preview Grid Columns
  */
 LabelApp.syncPdfColumns = function() {
-  const cols = parseInt(document.getElementById('pdfColumns').value) || 6;
+  const cols = parseInt(document.getElementById('pdfColumns').value) || 16;
   const gridColsInput = document.getElementById('gridCols');
   if (gridColsInput && parseInt(gridColsInput.value) !== cols) {
     gridColsInput.value = cols;
   }
   LabelApp.renderPreview();
+  LabelApp.updateRollEstimate();
 };
