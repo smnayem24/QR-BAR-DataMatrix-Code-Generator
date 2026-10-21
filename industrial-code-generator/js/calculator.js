@@ -11,7 +11,7 @@ LabelApp.Calculator = {};
 
 // Default Planner State
 LabelApp.Calculator.state = {
-  totalOrder: 20000,
+  totalOrder: 0,
   labelWidthIn: 3.0,
   labelHeightIn: 3.5,
   rollWidthIn: 48.0,
@@ -64,8 +64,16 @@ LabelApp.Calculator.syncFromStudio = function() {
   LabelApp.Calculator.state.labelHeightIn = dims.heightIn || 3.5;
 
   const totalAll = (LabelApp.state.generatedItems && LabelApp.state.generatedItems.length) || 0;
+  const calcTotalInput = document.getElementById('calcTotalOrder');
+
   if (totalAll > 0) {
     LabelApp.Calculator.state.totalOrder = totalAll;
+    if (calcTotalInput) calcTotalInput.value = totalAll;
+  } else {
+    // If no labels generated in studio, check if user manually typed a quantity
+    const manualQty = parseInt(calcTotalInput && calcTotalInput.value ? calcTotalInput.value : 0, 10) || 0;
+    LabelApp.Calculator.state.totalOrder = manualQty;
+    if (calcTotalInput && manualQty === 0) calcTotalInput.value = '';
   }
 
   const rollPresetEl = document.getElementById('rollMediaPreset');
@@ -82,10 +90,6 @@ LabelApp.Calculator.syncFromStudio = function() {
   if (gapEl) {
     LabelApp.Calculator.state.gapIn = parseFloat(gapEl.value) || 0;
   }
-
-  // Populate UI inputs in Calculator tab
-  const calcTotalInput = document.getElementById('calcTotalOrder');
-  if (calcTotalInput) calcTotalInput.value = LabelApp.Calculator.state.totalOrder;
 
   const calcWInput = document.getElementById('calcLabelW');
   if (calcWInput) calcWInput.value = LabelApp.Calculator.state.labelWidthIn;
@@ -185,7 +189,7 @@ LabelApp.Calculator.calculate = function() {
   const gapInput = document.getElementById('calcGap');
   const maxHInput = document.getElementById('calcMaxHeight');
 
-  const totalOrder = Math.max(1, parseInt(totalInput ? totalInput.value : 20000, 10) || 20000);
+  const totalOrder = Math.max(0, parseInt(totalInput && totalInput.value ? totalInput.value : 0, 10) || 0);
   const labelW = Math.max(0.2, parseFloat(wInput ? wInput.value : 3.0) || 3.0);
   const labelH = Math.max(0.2, parseFloat(hInput ? hInput.value : 3.5) || 3.5);
   const rollW = Math.max(2.0, parseFloat(rollWInput ? rollWInput.value : 48.0) || 48.0);
@@ -217,11 +221,11 @@ LabelApp.Calculator.calculate = function() {
   const fileLengthM = (fileHeightIn * 0.0254).toFixed(1);
 
   // 3. Total Production Metrics
-  const totalRows = Math.ceil(totalOrder / cols);
+  const totalRows = totalOrder > 0 ? Math.ceil(totalOrder / cols) : 0;
   const totalLengthIn = totalRows * labelH + Math.max(0, totalRows - 1) * gap;
   const totalLengthFt = (totalLengthIn / 12).toFixed(1);
   const totalLengthM = (totalLengthIn * 0.0254).toFixed(1);
-  const totalParts = Math.ceil(totalOrder / zeroWasteBatchSize);
+  const totalParts = totalOrder > 0 ? Math.ceil(totalOrder / zeroWasteBatchSize) : 0;
 
   // 4. Update Stat Badges in UI
   const statCols = document.getElementById('calcStatCols');
@@ -229,12 +233,19 @@ LabelApp.Calculator.calculate = function() {
   const statBatch = document.getElementById('calcStatBatch');
   const statParts = document.getElementById('calcStatParts');
   const statLength = document.getElementById('calcStatLength');
+  const btnExportAll = document.getElementById('btnExportAllCalc');
 
   if (statCols) statCols.textContent = `${cols} Cols`;
   if (statUtil) statUtil.textContent = `${widthUtilPct.toFixed(1)}%`;
   if (statBatch) statBatch.textContent = `${zeroWasteBatchSize.toLocaleString()} Labels`;
   if (statParts) statParts.textContent = `${totalParts} PDF Files`;
-  if (statLength) statLength.textContent = `${totalLengthFt} ft (${totalLengthM}m)`;
+  if (statLength) statLength.textContent = totalOrder > 0 ? `${totalLengthFt} ft (${totalLengthM}m)` : `0 ft (0m)`;
+
+  if (btnExportAll) {
+    btnExportAll.disabled = (totalOrder === 0);
+    btnExportAll.style.opacity = totalOrder === 0 ? '0.5' : '1';
+    btnExportAll.style.cursor = totalOrder === 0 ? 'not-allowed' : 'pointer';
+  }
 
   // 5. Update Visual Roll Cross-Section Bar
   const visRollBar = document.getElementById('calcVisRollBar');
@@ -263,6 +274,21 @@ LabelApp.Calculator.calculate = function() {
   // 6. Build the Pre-calculated Batch Schedule Table
   const tableBody = document.getElementById('calcScheduleTbody');
   if (tableBody) {
+    if (totalOrder === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding:36px 16px; color:#64748B;">
+            <div style="font-size:28px; margin-bottom:8px;">📦</div>
+            <div style="font-weight:700; font-size:14px; color:#1E293B; margin-bottom:4px;">No Production Order Defined Yet</div>
+            <div style="font-size:12px; color:#64748B; max-width:440px; margin:0 auto; line-height:1.5;">
+              Generate codes in <strong>Label Studio & Generator</strong> or enter a <strong>Total Order Quantity</strong> on the left panel to calculate zero-waste batches.
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
     let rowsHtml = '';
     let currStart = 1;
 
