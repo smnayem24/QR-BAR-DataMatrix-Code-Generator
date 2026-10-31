@@ -205,6 +205,11 @@ LabelApp.CodeEngine.renderIntoDOM = function (containerEl, codeText, codeType, b
   }
 
   // 3. 1D BARCODE (Code 128, Code 39, EAN, UPC, ITF)
+  let formatToUse = (barcodeFormat || 'CODE128').toUpperCase();
+  if ((formatToUse === 'EAN13' || formatToUse === 'UPC' || formatToUse === 'ITF14') && !/^\d+$/.test(cleanText)) {
+    formatToUse = 'CODE128';
+  }
+
   const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgEl.style.width = '100%';
   svgEl.style.height = '100%';
@@ -214,7 +219,7 @@ LabelApp.CodeEngine.renderIntoDOM = function (containerEl, codeText, codeType, b
   try {
     if (typeof JsBarcode !== 'undefined') {
       JsBarcode(svgEl, cleanText, {
-        format: barcodeFormat || 'CODE128',
+        format: formatToUse,
         displayValue: false,
         lineColor: barColor,
         background: 'transparent',
@@ -233,13 +238,14 @@ LabelApp.CodeEngine.renderIntoDOM = function (containerEl, codeText, codeType, b
       containerEl.innerHTML = `<div style="font-size:10px; color:#c00;">JsBarcode library loading...</div>`;
     }
   } catch (err) {
-    containerEl.innerHTML = `<div style="font-size:10px; color:#c00;">Invalid ${barcodeFormat || 'barcode'}: ${LabelApp.escapeHtml(cleanText)}</div>`;
+    containerEl.innerHTML = `<div style="font-size:10px; color:#c00;">Invalid ${formatToUse}: ${LabelApp.escapeHtml(cleanText)}</div>`;
   }
 };
 
 /**
  * Render single label to high-DPI HTMLCanvasElement
- * Includes DataMatrix 5mm safety border & cut line trimming guide support
+ * Includes DataMatrix 5mm safety border & cut line trimming guide support,
+ * and 1D Barcode strict zero-overlap vertical stacking.
  */
 LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSettings) {
   const { widthIn, heightIn } = dims;
@@ -257,7 +263,7 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
   const textPos = s.textPosition;
   const fontFamily = s.fontFamily || 'Inter';
   const fontWeight = s.fontWeight || '700';
-  const fontSizeBase = s.fontSize || 22;
+  const fontSizeBase = s.fontSize || 36;
   const borderStyle = s.borderStyle;
   const textColor = s.textColor || '#000000';
   const barColor = s.barColor || '#000000';
@@ -400,7 +406,6 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
       const scaleFactor = dpi / 96;
       const scaledLetterSpacing = Math.round((s.letterSpacing || 0) * scaleFactor);
 
-      // Start from user's chosen text size
       let fontSize = Math.round((fontSizeBase || 22) * scaleFactor);
       const maxAllowedH = Math.round(textZoneHeight * 0.85);
       if (fontSize > maxAllowedH) {
@@ -424,7 +429,7 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
   }
 
   // =========================================================================
-  // STANDARD 1D BARCODE & QR CODE LAYOUT
+  // STANDARD 1D INDUSTRIAL BARCODE & QR CODE STACK LAYOUT (ZERO OVERLAP)
   // =========================================================================
   if (borderStyle !== 'none') {
     ctx.lineWidth = Math.max(1, Math.round(dpi / 150));
@@ -435,36 +440,53 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
   }
 
   const scaleFactor = dpi / 96;
-  const scaledFontSize = Math.round(fontSizeBase * scaleFactor);
   const scaledLetterSpacing = Math.round((s.letterSpacing || 0) * scaleFactor);
   const hasTopText = (textPos === 'top' || textPos === 'both');
   const hasBottomText = (textPos === 'bottom' || textPos === 'both');
 
-  const textHeightUnit = Math.round(scaledFontSize * 1.25);
-  const gap = Math.round(scaledFontSize * 0.35);
+  // Font sizing in pixels with proportional ceiling
+  const basePx = Math.round((fontSizeBase || 36) * scaleFactor);
+  const maxLinePx = Math.round(heightPx * 0.26);
+  let topFontPx = Math.max(10, Math.min(basePx, maxLinePx));
+  let bottomFontPx = Math.max(10, Math.min(Math.round(basePx * 0.85), Math.round(maxLinePx * 0.85)));
+
+  const topTextH = hasTopText ? Math.round(topFontPx * 1.25) : 0;
+  const bottomTextH = hasBottomText ? Math.round(bottomFontPx * 1.25) : 0;
+  const gapPx = Math.max(4, Math.round(topFontPx * 0.28));
 
   let totalTextH = 0;
-  if (hasTopText) totalTextH += textHeightUnit + gap;
-  if (hasBottomText) totalTextH += textHeightUnit + gap;
+  if (hasTopText) totalTextH += topTextH + gapPx;
+  if (hasBottomText) totalTextH += bottomTextH + gapPx;
 
   const codeMaxWidth = Math.round(widthPx * widthRatioPct);
-  const maxAllowedH = heightPx - totalTextH - Math.round(heightPx * 0.10);
-  const codeMaxHeight = Math.max(Math.round(heightPx * 0.30), Math.min(maxAllowedH, Math.round(heightPx * heightRatioPct)));
+  const safeContentH = Math.max(20, heightPx - Math.round(heightPx * 0.08));
+  const availableCodeH = Math.max(20, safeContentH - totalTextH);
+  const codeHeightRatio = Math.min(0.92, Math.max(0.20, (s.barcodeHeightRatio || 70) / 100));
+  const codeMaxHeight = Math.max(20, Math.round(availableCodeH * codeHeightRatio));
 
   const totalBlockH = totalTextH + codeMaxHeight;
-  let curY = Math.max(Math.round(heightPx * 0.04), Math.round((heightPx - totalBlockH) / 2));
+  let curY = Math.max(Math.round(heightPx * 0.03), Math.round((heightPx - totalBlockH) / 2));
 
-  // Top Text
+  // Top Text (Header)
   if (hasTopText) {
     ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.font = `${fontWeight} ${scaledFontSize}px "${fontFamily}", "Inter", Arial, sans-serif`;
-    LabelApp.CodeEngine.drawTextWithSpacing(ctx, item.title.toUpperCase(), widthPx / 2, curY, scaledLetterSpacing, 'center');
-    curY += textHeightUnit + gap;
+    ctx.textBaseline = 'middle';
+    ctx.font = `${fontWeight} ${topFontPx}px "${fontFamily}", "Inter", Arial, sans-serif`;
+
+    const topStr = String(item.title || item.code).toUpperCase();
+    let measuredW = LabelApp.CodeEngine.measureTextWithSpacing(ctx, topStr, scaledLetterSpacing);
+    if (measuredW > widthPx * 0.94) {
+      topFontPx = Math.floor(topFontPx * ((widthPx * 0.94) / measuredW));
+      ctx.font = `${fontWeight} ${topFontPx}px "${fontFamily}", "Inter", Arial, sans-serif`;
+    }
+
+    const textCenterY = curY + topTextH / 2;
+    LabelApp.CodeEngine.drawTextWithSpacing(ctx, topStr, widthPx / 2, textCenterY, scaledLetterSpacing, 'center');
+    curY += topTextH + gapPx;
   }
 
-  // Code Render
+  // Code Render (QR or 1D Barcode)
   const cleanText = item.code.toUpperCase();
 
   if (codeType === 'qrcode' || format === 'QR') {
@@ -481,14 +503,20 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
     if (qrImg) {
       const qx = Math.round((widthPx - qrSize) / 2);
       ctx.drawImage(qrImg, qx, curY, qrSize, qrSize);
-      curY += qrSize + gap;
+      curY += qrSize + gapPx;
     }
   } else {
-    // 1D Barcode
+    // 1D Barcode with alphanumeric format fallback
+    let formatToUse = (format || 'CODE128').toUpperCase();
+    if ((formatToUse === 'EAN13' || formatToUse === 'UPC' || formatToUse === 'ITF14') && !/^\d+$/.test(cleanText)) {
+      formatToUse = 'CODE128';
+    }
+
     const offCanvas = document.createElement('canvas');
+    let bcSuccess = false;
     try {
       JsBarcode(offCanvas, cleanText, {
-        format: format,
+        format: formatToUse,
         displayValue: false,
         lineColor: barColor,
         background: bgColor,
@@ -496,27 +524,49 @@ LabelApp.CodeEngine.renderLabelToCanvas = function (item, dims, dpi, userSetting
         width: Math.max(2, Math.round(scaleFactor * 2.2)),
         height: 200
       });
-
-      if (offCanvas.width > 0) {
-        const drawW = codeMaxWidth;
-        const drawH = codeMaxHeight;
-        const bx = Math.round((widthPx - drawW) / 2);
-        ctx.drawImage(offCanvas, bx, curY, drawW, drawH);
-        curY += drawH + gap;
-      }
+      bcSuccess = offCanvas.width > 0;
     } catch (e) {
-      console.error('JsBarcode Canvas error:', e);
+      console.warn('JsBarcode canvas error, fallback to CODE128:', e);
+    }
+
+    if (!bcSuccess) {
+      try {
+        JsBarcode(offCanvas, cleanText, {
+          format: 'CODE128',
+          displayValue: false,
+          lineColor: barColor,
+          background: bgColor,
+          margin: 0,
+          width: Math.max(2, Math.round(scaleFactor * 2.2)),
+          height: 200
+        });
+        bcSuccess = offCanvas.width > 0;
+      } catch (e2) {}
+    }
+
+    if (bcSuccess) {
+      const drawW = codeMaxWidth;
+      const drawH = codeMaxHeight;
+      const bx = Math.round((widthPx - drawW) / 2);
+      ctx.drawImage(offCanvas, bx, curY, drawW, drawH);
+      curY += drawH + gapPx;
     }
   }
 
-  // Bottom Text
+  // Bottom Text (Footer)
   if (hasBottomText) {
     ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const bSize = Math.max(10, Math.round(scaledFontSize * 0.85));
-    ctx.font = `600 ${bSize}px "${fontFamily}", "Inter", Arial, sans-serif`;
-    LabelApp.CodeEngine.drawTextWithSpacing(ctx, item.title.toUpperCase(), widthPx / 2, curY, scaledLetterSpacing, 'center');
+    ctx.textBaseline = 'middle';
+    ctx.font = `600 ${bottomFontPx}px "${fontFamily}", "Inter", Arial, sans-serif`;
+    const bottomStr = String(item.subtitle || item.code).toUpperCase();
+    let measuredW = LabelApp.CodeEngine.measureTextWithSpacing(ctx, bottomStr, scaledLetterSpacing);
+    if (measuredW > widthPx * 0.94) {
+      bottomFontPx = Math.floor(bottomFontPx * ((widthPx * 0.94) / measuredW));
+      ctx.font = `600 ${bottomFontPx}px "${fontFamily}", "Inter", Arial, sans-serif`;
+    }
+    const textCenterY = curY + bottomTextH / 2;
+    LabelApp.CodeEngine.drawTextWithSpacing(ctx, bottomStr, widthPx / 2, textCenterY, scaledLetterSpacing, 'center');
   }
 
   return canvas;
@@ -536,7 +586,7 @@ LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
   const textPos = s.textPosition;
   const fontFamily = s.fontFamily || 'Inter';
   const fontWeight = s.fontWeight || '700';
-  const fontSizeBase = s.fontSize || 22;
+  const fontSizeBase = s.fontSize || 36;
   const letterSpacing = s.letterSpacing || 1;
   const borderStyle = s.borderStyle;
   const textColor = s.textColor || '#000000';
@@ -641,24 +691,32 @@ LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
   }
 
   // =========================================================================
-  // STANDARD 1D BARCODE & QR CODE VECTOR SVG
+  // STANDARD 1D BARCODE & QR CODE VECTOR SVG (ZERO OVERLAP STACK)
   // =========================================================================
   const hasTopText = (textPos === 'top' || textPos === 'both');
   const hasBottomText = (textPos === 'bottom' || textPos === 'both');
 
-  const textHeightUnit = Math.round(fontSizeBase * 1.25);
-  const gap = Math.round(fontSizeBase * 0.35);
+  const basePx = fontSizeBase || 36;
+  const maxLinePx = Math.round(hPx * 0.26);
+  let topFontPx = Math.max(10, Math.min(basePx, maxLinePx));
+  let bottomFontPx = Math.max(10, Math.min(Math.round(basePx * 0.85), Math.round(maxLinePx * 0.85)));
+
+  const topTextH = hasTopText ? Math.round(topFontPx * 1.25) : 0;
+  const bottomTextH = hasBottomText ? Math.round(bottomFontPx * 1.25) : 0;
+  const gapPx = Math.max(4, Math.round(topFontPx * 0.28));
 
   let totalTextH = 0;
-  if (hasTopText) totalTextH += textHeightUnit + gap;
-  if (hasBottomText) totalTextH += textHeightUnit + gap;
+  if (hasTopText) totalTextH += topTextH + gapPx;
+  if (hasBottomText) totalTextH += bottomTextH + gapPx;
 
   const codeMaxWidth = Math.round(wPx * widthRatioPct);
-  const maxAllowedH = hPx - totalTextH - Math.round(hPx * 0.10);
-  const codeMaxHeight = Math.max(Math.round(hPx * 0.30), Math.min(maxAllowedH, Math.round(hPx * heightRatioPct)));
+  const safeContentH = Math.max(20, hPx - Math.round(hPx * 0.08));
+  const availableCodeH = Math.max(20, safeContentH - totalTextH);
+  const codeHeightRatio = Math.min(0.92, Math.max(0.20, (s.barcodeHeightRatio || 70) / 100));
+  const codeMaxHeight = Math.max(20, Math.round(availableCodeH * codeHeightRatio));
 
   const totalBlockH = totalTextH + codeMaxHeight;
-  let curY = Math.max(Math.round(hPx * 0.04), Math.round((hPx - totalBlockH) / 2));
+  let curY = Math.max(Math.round(hPx * 0.03), Math.round((hPx - totalBlockH) / 2));
 
   let borderSvg = '';
   if (borderStyle !== 'none') {
@@ -669,8 +727,9 @@ LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
 
   let topTextSvg = '';
   if (hasTopText) {
-    topTextSvg = `<text x="${wPx / 2}" y="${curY + fontSizeBase}" text-anchor="middle" font-family="${fontFamily}, Arial, sans-serif" font-weight="${fontWeight}" font-size="${fontSizeBase}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${LabelApp.escapeHtml(item.title.toUpperCase())}</text>`;
-    curY += textHeightUnit + gap;
+    const textCenterY = curY + topTextH / 2 + Math.round(topFontPx * 0.35);
+    topTextSvg = `<text x="${wPx / 2}" y="${textCenterY}" text-anchor="middle" font-family="${fontFamily}, Arial, sans-serif" font-weight="${fontWeight}" font-size="${topFontPx}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${LabelApp.escapeHtml(item.title.toUpperCase())}</text>`;
+    curY += topTextH + gapPx;
   }
 
   let codeSvgContent = '';
@@ -695,22 +754,40 @@ LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
           ${innerContent}
         </svg>
       `;
-      curY += qrSize + gap;
+      curY += qrSize + gapPx;
     } catch (e) {
       console.warn('QR SVG error:', e);
     }
   } else {
-    // 1D Barcode
+    // 1D Barcode with auto-fallback for alphanumeric
+    let formatToUse = (format || 'CODE128').toUpperCase();
+    if ((formatToUse === 'EAN13' || formatToUse === 'UPC' || formatToUse === 'ITF14') && !/^\d+$/.test(cleanText)) {
+      formatToUse = 'CODE128';
+    }
+
     const tempSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    JsBarcode(tempSvg, cleanText, {
-      format: format,
-      displayValue: false,
-      lineColor: barColor,
-      background: 'transparent',
-      margin: 0,
-      width: 2,
-      height: 100
-    });
+    try {
+      JsBarcode(tempSvg, cleanText, {
+        format: formatToUse,
+        displayValue: false,
+        lineColor: barColor,
+        background: 'transparent',
+        margin: 0,
+        width: 2,
+        height: 100
+      });
+    } catch (e) {
+      JsBarcode(tempSvg, cleanText, {
+        format: 'CODE128',
+        displayValue: false,
+        lineColor: barColor,
+        background: 'transparent',
+        margin: 0,
+        width: 2,
+        height: 100
+      });
+    }
+
     const genW = parseFloat(tempSvg.getAttribute('width')) || 200;
     const genH = parseFloat(tempSvg.getAttribute('height')) || 100;
     const bx = Math.round((wPx - codeMaxWidth) / 2);
@@ -720,13 +797,14 @@ LabelApp.CodeEngine.renderLabelToSVG = function (item, dims, userSettings) {
         ${tempSvg.innerHTML}
       </svg>
     `;
-    curY += codeMaxHeight + gap;
+    curY += codeMaxHeight + gapPx;
   }
 
   let bottomTextSvg = '';
   if (hasBottomText) {
-    const bSize = Math.max(10, fontSizeBase - 4);
-    bottomTextSvg = `<text x="${wPx / 2}" y="${curY + bSize}" text-anchor="middle" font-family="${fontFamily}, Arial, sans-serif" font-weight="600" font-size="${bSize}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${LabelApp.escapeHtml(item.title.toUpperCase())}</text>`;
+    const textCenterY = curY + bottomTextH / 2 + Math.round(bottomFontPx * 0.35);
+    const bottomStr = String(item.subtitle || item.code).toUpperCase();
+    bottomTextSvg = `<text x="${wPx / 2}" y="${textCenterY}" text-anchor="middle" font-family="${fontFamily}, Arial, sans-serif" font-weight="600" font-size="${bottomFontPx}px" letter-spacing="${letterSpacing}px" fill="${textColor}">${LabelApp.escapeHtml(bottomStr)}</text>`;
   }
 
   return `<?xml version="1.0" encoding="utf-8"?>
@@ -767,6 +845,7 @@ LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
   const titleText = String(item.title || item.code || '').toUpperCase();
   const textPos = s.textPosition || 'top';
   const hasText = (textPos !== 'none');
+  const is2D = (codeType === 'datamatrix' || codeType === 'qrcode');
 
   // 1. Draw solid background if not standard white
   if (s.bgColor && s.bgColor.toUpperCase() !== '#FFFFFF') {
@@ -776,45 +855,61 @@ LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
   }
 
   // 2. Safety Margin calculation
-  const marginMm = (typeof s.marginMm === 'number') ? s.marginMm : 4.0;
-  const marginIn = marginMm / 25.4;
-  const showCutLine = Boolean(s.showCutLine);
+  let marginIn;
+  if (is2D) {
+    const marginMm = (typeof s.marginMm === 'number') ? s.marginMm : 4.0;
+    marginIn = marginMm / 25.4;
+  } else {
+    // 1D Barcode: use labelPadding or safe quiet zone (min 0.08 in)
+    marginIn = Math.max(0.08, ((s.labelPadding || 12) / 96));
+  }
 
+  const showCutLine = is2D && Boolean(s.showCutLine);
   const safeW = Math.max(0.1, labelW - marginIn * 2);
   const safeH = Math.max(0.1, labelH - marginIn * 2);
   const safeLeft = posX + marginIn;
   const safeTop = posY + marginIn;
 
-  // 3. Optional Dashed Cut Line Guide (Trimming guide)
+  // 3. Optional Dashed Cut Line Guide (only for 2D sticker trimming guide)
   if (showCutLine && marginIn > 0) {
     pdf.setDrawColor(203, 213, 225); // #CBD5E1
     pdf.setLineWidth(0.008);
     if (pdf.setLineDashPattern) pdf.setLineDashPattern([0.04, 0.04], 0);
     pdf.rect(safeLeft, safeTop, safeW, safeH, 'S');
     if (pdf.setLineDashPattern) pdf.setLineDashPattern([], 0);
+  } else if (!is2D && s.borderStyle && s.borderStyle !== 'none' && !s.drawSheetCutLines) {
+    // Individual label border for 1D barcodes if not part of multi-column cut line grid
+    const strokeRgb = (s.borderStyle === 'solid-dark') ? [0, 0, 0] : [208, 213, 221];
+    pdf.setDrawColor(strokeRgb[0], strokeRgb[1], strokeRgb[2]);
+    pdf.setLineWidth(0.008);
+    if (s.borderStyle === 'dashed' && pdf.setLineDashPattern) {
+      pdf.setLineDashPattern([0.04, 0.04], 0);
+    }
+    pdf.rect(posX, posY, labelW, labelH, 'S');
+    if (pdf.setLineDashPattern) pdf.setLineDashPattern([], 0);
   }
 
-  // 4. Height allocation for 2D vs 1D
-  const is2D = (codeType === 'datamatrix' || codeType === 'qrcode');
-  const textZoneH = hasText ? (safeH * 0.16) : 0;
-  const qrZoneH = safeH - textZoneH;
-
-  let qrZoneTop, textZoneTop;
-  if (textPos === 'bottom') {
-    qrZoneTop = safeTop;
-    textZoneTop = safeTop + qrZoneH;
-  } else {
-    textZoneTop = safeTop;
-    qrZoneTop = safeTop + textZoneH;
-  }
-
-  // 5. Draw 2D or 1D Code as Pure Vector Rectangles
+  // 4. Render Code as Pure Vector Primitives
   if (is2D) {
+    // =======================================================================
+    // 2D DEDICATED MATRIX ENGINE (DATA MATRIX & QR CODE)
+    // =======================================================================
+    const textZoneH = hasText ? (safeH * 0.16) : 0;
+    const qrZoneH = safeH - textZoneH;
+
+    let qrZoneTop, textZoneTop;
+    if (textPos === 'bottom') {
+      qrZoneTop = safeTop;
+      textZoneTop = safeTop + qrZoneH;
+    } else {
+      textZoneTop = safeTop;
+      qrZoneTop = safeTop + textZoneH;
+    }
+
     const bcid = (codeType === 'qrcode')
       ? 'qrcode'
       : ((format === 'datamatrixrectangular') ? 'datamatrixrectangular' : 'datamatrix');
 
-    // Sample module matrix using tiny 1-scale canvas (~16x16 or 24x24 px, 0.1ms, ~0 RAM)
     const mCanvas = document.createElement('canvas');
     let mSuccess = false;
 
@@ -866,7 +961,7 @@ LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
       const barColorRgb = LabelApp.hexToRgb(s.barColor || '#000000') || [0, 0, 0];
       pdf.setFillColor(barColorRgb[0], barColorRgb[1], barColorRgb[2]);
 
-      // Scan rows and merge contiguous black cells for maximum rendering speed and compact PDF
+      // Scan rows and merge contiguous black cells for maximum speed and small PDF size
       for (let r = 0; r < mH; r++) {
         let spanStart = -1;
         for (let c = 0; c < mW; c++) {
@@ -889,12 +984,127 @@ LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
         }
       }
     }
+
+    // Draw 2D Header Text
+    if (hasText) {
+      const textColorRgb = LabelApp.hexToRgb(s.textColor || '#000000') || [0, 0, 0];
+      pdf.setTextColor(textColorRgb[0], textColorRgb[1], textColorRgb[2]);
+
+      const isMono = (s.fontFamily === 'JetBrains Mono' || s.fontFamily === 'Roboto Mono');
+      const isBold = (parseInt(s.fontWeight, 10) >= 700);
+      pdf.setFont(isMono ? 'courier' : 'helvetica', isBold ? 'bold' : 'normal');
+
+      const basePt = (s.fontSize || 40) * 0.75;
+      const maxPt = (textZoneH * 72) * 0.82;
+      let fontPt = Math.max(6, Math.min(basePt, maxPt));
+      pdf.setFontSize(fontPt);
+
+      const charSpaceIn = Math.max(0, (s.letterSpacing || 0) / 96);
+      const centerX = safeLeft + safeW / 2;
+      const textY = textZoneTop + textZoneH / 2;
+      const maxTextW = safeW * 0.94;
+
+      let measuredW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, titleText, charSpaceIn);
+      if (measuredW > maxTextW && measuredW > 0) {
+        fontPt = Math.max(6, fontPt * (maxTextW / measuredW));
+        pdf.setFontSize(fontPt);
+      }
+
+      if (typeof pdf.setCharSpace === 'function') {
+        pdf.setCharSpace(0);
+      }
+
+      LabelApp.CodeEngine.drawPdfTextWithSpacing(pdf, titleText, centerX, textY, charSpaceIn, {
+        baseline: 'middle'
+      });
+    }
+
   } else {
-    // 1D Barcode Vector
+    // =======================================================================
+    // 1D INDUSTRIAL BARCODE STACK ENGINE (ZERO OVERLAP GUARANTEED)
+    // Supports 3x3", 6x3", 4x2", etc. with dynamic height budgeting & quiet zones
+    // =======================================================================
+    const subText = String(item.subtitle || item.code || '').toUpperCase();
+    const hasTopText = (textPos === 'top' || textPos === 'both');
+    const hasBottomText = (textPos === 'bottom' || textPos === 'both');
+
+    const textColorRgb = LabelApp.hexToRgb(s.textColor || '#000000') || [0, 0, 0];
+    const barColorRgb = LabelApp.hexToRgb(s.barColor || '#000000') || [0, 0, 0];
+    const isMono = (s.fontFamily === 'JetBrains Mono' || s.fontFamily === 'Roboto Mono');
+    const isBold = (parseInt(s.fontWeight, 10) >= 700);
+    const charSpaceIn = Math.max(0, (s.letterSpacing || 0) / 96);
+    const centerX = posX + labelW / 2;
+
+    // 1. Font Sizing & Line Heights (points -> inches)
+    const basePt = (s.fontSize || 36) * 0.75;
+    // Cap text line height to at most 26% of safe height so barcode gets ample room
+    const maxLinePt = Math.max(8, (safeH * 72) * 0.26);
+    let topFontPt = Math.max(6, Math.min(basePt, maxLinePt));
+    let bottomFontPt = Math.max(6, Math.min(basePt * 0.85, maxLinePt * 0.85));
+
+    // Auto-fit top text width
+    if (hasTopText) {
+      pdf.setFont(isMono ? 'courier' : 'helvetica', isBold ? 'bold' : 'normal');
+      pdf.setFontSize(topFontPt);
+      const measuredTopW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, titleText, charSpaceIn);
+      const maxTextW = safeW * 0.94;
+      if (measuredTopW > maxTextW && measuredTopW > 0) {
+        topFontPt = Math.max(6, topFontPt * (maxTextW / measuredTopW));
+      }
+    }
+
+    // Auto-fit bottom text width
+    if (hasBottomText) {
+      pdf.setFont(isMono ? 'courier' : 'helvetica', 'normal');
+      pdf.setFontSize(bottomFontPt);
+      const measuredBottomW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, subText, charSpaceIn);
+      const maxTextW = safeW * 0.94;
+      if (measuredBottomW > maxTextW && measuredBottomW > 0) {
+        bottomFontPt = Math.max(6, bottomFontPt * (maxTextW / measuredBottomW));
+      }
+    }
+
+    const topTextH = hasTopText ? ((topFontPt / 72) * 1.25) : 0;
+    const bottomTextH = hasBottomText ? ((bottomFontPt / 72) * 1.25) : 0;
+    const gapIn = Math.max(0.04, ((hasTopText ? topFontPt : bottomFontPt) / 72) * 0.28);
+
+    let totalTextH = 0;
+    if (hasTopText) totalTextH += topTextH + gapIn;
+    if (hasBottomText) totalTextH += bottomTextH + gapIn;
+
+    // 2. Budget Barcode Height from remaining available space
+    const availableCodeH = Math.max(0.25, safeH - totalTextH);
+    const codeHeightRatio = Math.min(0.92, Math.max(0.20, (s.barcodeHeightRatio || 70) / 100));
+    const targetH = Math.max(0.25, availableCodeH * codeHeightRatio);
+
+    const totalBlockH = totalTextH + targetH;
+    let curY = safeTop + Math.max(0, (safeH - totalBlockH) / 2);
+
+    // 3. Draw Top Text (Header)
+    if (hasTopText) {
+      pdf.setTextColor(textColorRgb[0], textColorRgb[1], textColorRgb[2]);
+      pdf.setFont(isMono ? 'courier' : 'helvetica', isBold ? 'bold' : 'normal');
+      pdf.setFontSize(topFontPt);
+      if (typeof pdf.setCharSpace === 'function') pdf.setCharSpace(0);
+
+      const textCenterY = curY + topTextH / 2;
+      LabelApp.CodeEngine.drawPdfTextWithSpacing(pdf, titleText, centerX, textCenterY, charSpaceIn, {
+        baseline: 'middle'
+      });
+      curY += topTextH + gapIn;
+    }
+
+    // 4. Draw 1D Barcode Vector (Code 128 / Code 39 / etc.)
+    let formatToUse = (format || 'CODE128').toUpperCase();
+    if ((formatToUse === 'EAN13' || formatToUse === 'UPC' || formatToUse === 'ITF14') && !/^\d+$/.test(cleanText)) {
+      formatToUse = 'CODE128'; // Auto-safe fallback for alphanumeric codes like F-46-01A
+    }
+
     const bCanvas = document.createElement('canvas');
+    let bcSuccess = false;
     try {
       JsBarcode(bCanvas, cleanText, {
-        format: format,
+        format: formatToUse,
         displayValue: false,
         lineColor: '#000000',
         background: '#ffffff',
@@ -902,80 +1112,72 @@ LabelApp.CodeEngine.drawLabelToPDF = function (pdf, item, dims, posX, posY, s) {
         width: 1,
         height: 50
       });
-      if (bCanvas.width > 0) {
-        const bW = bCanvas.width;
-        const bCtx = bCanvas.getContext('2d');
-        const bData = bCtx.getImageData(0, 0, bW, 1).data;
+      bcSuccess = bCanvas.width > 0;
+    } catch (e) {
+      console.warn('JsBarcode format failed, falling back to CODE128:', e);
+    }
 
-        const maxCodeW = labelW * ((s.barcodeWidthRatio || 90) / 100);
-        const maxCodeH = labelH * ((s.barcodeHeightRatio || 70) / 100);
-        const targetW = maxCodeW;
-        const targetH = maxCodeH;
-        const colW = targetW / bW;
-        const bx = posX + (labelW - targetW) / 2;
-        const by = posY + (labelH - targetH) / 2;
+    if (!bcSuccess) {
+      try {
+        JsBarcode(bCanvas, cleanText, {
+          format: 'CODE128',
+          displayValue: false,
+          lineColor: '#000000',
+          background: '#ffffff',
+          margin: 0,
+          width: 1,
+          height: 50
+        });
+        bcSuccess = bCanvas.width > 0;
+      } catch (err2) {
+        console.error('JsBarcode ultimate fallback error:', err2);
+      }
+    }
 
-        const barColorRgb = LabelApp.hexToRgb(s.barColor || '#000000') || [0, 0, 0];
-        pdf.setFillColor(barColorRgb[0], barColorRgb[1], barColorRgb[2]);
+    if (bcSuccess) {
+      const bW = bCanvas.width;
+      const bCtx = bCanvas.getContext('2d');
+      const bData = bCtx.getImageData(0, 0, bW, 1).data;
 
-        let spanStart = -1;
-        for (let c = 0; c < bW; c++) {
-          const idx = c * 4;
-          const isDark = (bData[idx + 3] > 128) && ((bData[idx] + bData[idx + 1] + bData[idx + 2]) < 384);
-          if (isDark) {
-            if (spanStart === -1) spanStart = c;
-          } else {
-            if (spanStart !== -1) {
-              pdf.rect(bx + spanStart * colW, by, (c - spanStart) * colW, targetH, 'F');
-              spanStart = -1;
-            }
+      const codeWidthRatio = Math.min(0.96, Math.max(0.30, (s.barcodeWidthRatio || 90) / 100));
+      const targetW = safeW * codeWidthRatio;
+      const colW = targetW / bW;
+      const bx = posX + (labelW - targetW) / 2;
+      const by = curY; // Starts strictly below top text!
+
+      pdf.setFillColor(barColorRgb[0], barColorRgb[1], barColorRgb[2]);
+
+      let spanStart = -1;
+      for (let c = 0; c < bW; c++) {
+        const idx = c * 4;
+        const isDark = (bData[idx + 3] > 128) && ((bData[idx] + bData[idx + 1] + bData[idx + 2]) < 384);
+        if (isDark) {
+          if (spanStart === -1) spanStart = c;
+        } else {
+          if (spanStart !== -1) {
+            pdf.rect(bx + spanStart * colW, by, (c - spanStart) * colW, targetH, 'F');
+            spanStart = -1;
           }
         }
-        if (spanStart !== -1) {
-          pdf.rect(bx + spanStart * colW, by, (bW - spanStart) * colW, targetH, 'F');
-        }
       }
-    } catch (e) {
-      console.warn('1D barcode vector error:', e);
-    }
-  }
+      if (spanStart !== -1) {
+        pdf.rect(bx + spanStart * colW, by, (bW - spanStart) * colW, targetH, 'F');
+      }
 
-  // 6. Draw Vector Header Text
-  if (hasText) {
-    const textColorRgb = LabelApp.hexToRgb(s.textColor || '#000000') || [0, 0, 0];
-    pdf.setTextColor(textColorRgb[0], textColorRgb[1], textColorRgb[2]);
-
-    const isMono = (s.fontFamily === 'JetBrains Mono' || s.fontFamily === 'Roboto Mono');
-    const isBold = (parseInt(s.fontWeight, 10) >= 700);
-    pdf.setFont(isMono ? 'courier' : 'helvetica', isBold ? 'bold' : 'normal');
-
-    // Font size: CSS px → PDF points (1px @ 96dpi ≈ 0.75 pt)
-    const basePt = (s.fontSize || 40) * 0.75;
-    const maxPt = (textZoneH * 72) * 0.82;
-    let fontPt = Math.max(6, Math.min(basePt, maxPt));
-    pdf.setFontSize(fontPt);
-
-    // CRITICAL: PDF is unit:'in'. Letter-spacing UI value is CSS px → inches = /96.
-    // Never use setCharSpace(px*0.75) here — that treated ~2" gaps between letters.
-    const charSpaceIn = Math.max(0, (s.letterSpacing || 0) / 96);
-    const centerX = safeLeft + safeW / 2;
-    const textY = textZoneTop + textZoneH / 2;
-    const maxTextW = safeW * 0.94;
-
-    let measuredW = LabelApp.CodeEngine.measurePdfTextWithSpacing(pdf, titleText, charSpaceIn);
-    if (measuredW > maxTextW && measuredW > 0) {
-      fontPt = Math.max(6, fontPt * (maxTextW / measuredW));
-      pdf.setFontSize(fontPt);
+      curY += targetH + gapIn;
     }
 
-    // Reset any leftover charSpace from prior draws
-    if (typeof pdf.setCharSpace === 'function') {
-      pdf.setCharSpace(0);
-    }
+    // 5. Draw Bottom Text (Footer)
+    if (hasBottomText) {
+      pdf.setTextColor(textColorRgb[0], textColorRgb[1], textColorRgb[2]);
+      pdf.setFont(isMono ? 'courier' : 'helvetica', 'normal');
+      pdf.setFontSize(bottomFontPt);
+      if (typeof pdf.setCharSpace === 'function') pdf.setCharSpace(0);
 
-    LabelApp.CodeEngine.drawPdfTextWithSpacing(pdf, titleText, centerX, textY, charSpaceIn, {
-      baseline: 'middle'
-    });
+      const textCenterY = curY + bottomTextH / 2;
+      LabelApp.CodeEngine.drawPdfTextWithSpacing(pdf, subText, centerX, textCenterY, charSpaceIn, {
+        baseline: 'middle'
+      });
+    }
   }
 };
-

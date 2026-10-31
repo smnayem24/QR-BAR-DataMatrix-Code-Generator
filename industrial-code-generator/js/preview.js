@@ -36,6 +36,8 @@ LabelApp.getUserSettings = function() {
     const qrShowCutLineCheck = document.getElementById('qrShowCutLineCheck');
     marginMm = qrMarginMmInput ? (parseFloat(qrMarginMmInput.value) || 5.0) : 5.0;
     showCutLine = qrShowCutLineCheck ? qrShowCutLineCheck.checked : true;
+  } else {
+    showCutLine = false;
   }
 
   const qrEccSelect = document.getElementById('qrEcc');
@@ -51,7 +53,7 @@ LabelApp.getUserSettings = function() {
     textPosition: document.getElementById('textPosition').value,
     fontFamily: document.getElementById('fontFamily').value,
     fontWeight: document.getElementById('fontWeight').value,
-    fontSize: parseInt(document.getElementById('fontSize').value) || 22,
+    fontSize: parseInt(document.getElementById('fontSize').value) || 36,
     letterSpacing: letterSpacing,
     slashedZero: document.getElementById('enableSlashedZero').checked,
     borderStyle: document.getElementById('borderStyle').value,
@@ -112,6 +114,7 @@ LabelApp.nextGridPage = function() {
 
 /**
  * Master Preview Render: Synchronizes Inspector and Batch Grid
+ * 100% WYSIWYG Precision Rendering using High-DPI Canvas for All Symbologies!
  */
 LabelApp.renderPreview = function() {
   const s = LabelApp.getUserSettings();
@@ -122,8 +125,6 @@ LabelApp.renderPreview = function() {
   if (s.borderStyle === 'solid-dark') borderClass = 'bordered-dark';
   else if (s.borderStyle === 'dashed') borderClass = 'bordered-dashed';
   else if (s.borderStyle === 'none') borderClass = '';
-
-  const slashedStyle = s.slashedZero ? 'font-variant-numeric: slashed-zero; font-feature-settings: "zero" 1;' : '';
 
   const singleFrame = document.getElementById('singleLabelFrame');
   const gridContainer = document.getElementById('barcodeGrid');
@@ -150,7 +151,7 @@ LabelApp.renderPreview = function() {
     if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
       singleDimTag.textContent = `${dims.widthRaw} × ${dims.heightRaw} ${dims.unit} (${widthMm} × ${heightMm} mm) • ${s.marginMm}mm Cut Zone`;
     } else {
-      singleDimTag.textContent = `${dims.widthRaw} × ${dims.heightRaw} ${dims.unit} (${widthMm} × ${heightMm} mm)`;
+      singleDimTag.textContent = `${dims.widthRaw} × ${dims.heightRaw} ${dims.unit} (${widthMm} × ${heightMm} mm) • 1D Barcode (${s.barcodeFormat || 'CODE128'})`;
     }
   }
 
@@ -176,65 +177,20 @@ LabelApp.renderPreview = function() {
 
   singleFrame.style.width = `${Math.round(inspectorW)}px`;
   singleFrame.style.height = `${Math.round(inspectorH)}px`;
+  singleFrame.className = 'single-label-frame';
+  singleFrame.style.padding = '0px';
+  singleFrame.style.border = 'none';
+  singleFrame.style.backgroundColor = 'transparent';
 
-  // For 2D Codes (DataMatrix & QR Code), render exact high-precision canvas sticker with cut line
-  if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
-    singleFrame.className = 'single-label-frame';
-    singleFrame.style.padding = '0px';
-    singleFrame.style.border = 'none';
-    singleFrame.style.backgroundColor = 'transparent';
-
-    const renderCanvas = LabelApp.CodeEngine.renderLabelToCanvas(singleItem, dims, 300, s);
-    renderCanvas.style.width = '100%';
-    renderCanvas.style.height = '100%';
-    renderCanvas.style.display = 'block';
-    renderCanvas.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
-    renderCanvas.style.borderRadius = '2px';
-    singleFrame.innerHTML = '';
-    singleFrame.appendChild(renderCanvas);
-  } else {
-    // 1D Barcode & QR Code standard inspector layout
-    singleFrame.className = `single-label-frame ${borderClass}`;
-    singleFrame.style.padding = `${s.labelPadding}px`;
-    singleFrame.style.backgroundColor = s.bgColor;
-
-    const hasTopText = (s.textPosition === 'top' || s.textPosition === 'both');
-    const hasBottomText = (s.textPosition === 'bottom' || s.textPosition === 'both');
-    const textSpaceEstimate = (hasTopText ? 30 : 0) + (hasBottomText ? 30 : 0);
-    const availableContentH = Math.max(40, inspectorH - textSpaceEstimate - (s.labelPadding * 2));
-    const singleCodeHeight = Math.round(availableContentH * (s.barcodeHeightRatio / 100));
-
-    const is2DCode = LabelApp.CodeEngine.is2D(s.codeType);
-    const codeBoxWidth = is2DCode ? `${singleCodeHeight}px` : `${s.barcodeWidthRatio}%`;
-
-    singleFrame.innerHTML = `
-      ${hasTopText ? `
-        <div class="barcode-text-top" style="font-family:'${s.fontFamily}', 'Inter', sans-serif; font-weight:${s.fontWeight}; font-size:${s.fontSize}px; letter-spacing:${s.letterSpacing}px; color:${s.textColor}; ${slashedStyle}">
-          ${LabelApp.escapeHtml(singleItem.title.toUpperCase())}
-        </div>
-      ` : ''}
-
-      <div class="barcode-svg-wrap" id="single-code-container" style="height: ${singleCodeHeight}px; width: ${codeBoxWidth}; margin: 0 auto; display: flex; align-items: center; justify-content: center;"></div>
-
-      ${hasBottomText ? `
-        <div class="barcode-text-bottom" style="font-family:'${s.fontFamily}', 'Inter', sans-serif; font-size:${Math.max(10, s.fontSize - 4)}px; letter-spacing:${s.letterSpacing}px; color:${s.textColor}; ${slashedStyle}">
-          ${LabelApp.escapeHtml(singleItem.title.toUpperCase())}
-        </div>
-      ` : ''}
-    `;
-
-    const singleCodeContainer = document.getElementById('single-code-container');
-    LabelApp.CodeEngine.renderIntoDOM(
-      singleCodeContainer,
-      singleItem.code,
-      s.codeType,
-      s.barcodeFormat,
-      s.barColor,
-      s.bgColor,
-      inspectorW * (s.barcodeWidthRatio / 100),
-      singleCodeHeight
-    );
-  }
+  // High-DPI 300 DPI Canvas for true 100% WYSIWYG matching PDF export!
+  const renderCanvas = LabelApp.CodeEngine.renderLabelToCanvas(singleItem, dims, 300, s);
+  renderCanvas.style.width = '100%';
+  renderCanvas.style.height = '100%';
+  renderCanvas.style.display = 'block';
+  renderCanvas.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
+  renderCanvas.style.borderRadius = '2px';
+  singleFrame.innerHTML = '';
+  singleFrame.appendChild(renderCanvas);
 
   // =====================================================================
   // 2. RENDER BATCH GRID (OPTIMIZED: 4 ROWS PER PAGE)
@@ -279,86 +235,30 @@ LabelApp.renderPreview = function() {
 
   const gridItemHeight = Math.max(90, Math.round(150 * (heightIn / widthIn)));
 
-  if (s.codeType === 'datamatrix' || s.codeType === 'qrcode') {
-    // For 2D batch view, render miniature stickers matching the continuous cut lines & layout
-    gridContainer.innerHTML = displayItems.map((item, relIdx) => {
-      const globalIdx = startIndex + relIdx;
-      const isSelected = globalIdx === safeIdx ? 'selected-item' : '';
-      return `
-        <div class="barcode-item ${borderClass} ${isSelected}" id="bc-item-${globalIdx}" onclick="LabelApp.selectLabelIndex(${globalIdx})" style="padding: 0px; background-color: ${s.bgColor}; min-height: ${gridItemHeight}px;">
-          <div class="item-actions">
-            <button class="mini-icon-btn" title="Download PNG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'png')">PNG</button>
-            <button class="mini-icon-btn" title="Download SVG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'svg')">SVG</button>
-          </div>
-          <div id="grid-dm-canvas-wrap-${globalIdx}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;"></div>
+  // Unified Batch View: Renders miniature stickers matching continuous cut lines & layout
+  gridContainer.innerHTML = displayItems.map((item, relIdx) => {
+    const globalIdx = startIndex + relIdx;
+    const isSelected = globalIdx === safeIdx ? 'selected-item' : '';
+    return `
+      <div class="barcode-item ${borderClass} ${isSelected}" id="bc-item-${globalIdx}" onclick="LabelApp.selectLabelIndex(${globalIdx})" style="padding: 0px; background-color: ${s.bgColor}; min-height: ${gridItemHeight}px;">
+        <div class="item-actions">
+          <button class="mini-icon-btn" title="Download PNG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'png')">PNG</button>
+          <button class="mini-icon-btn" title="Download SVG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'svg')">SVG</button>
         </div>
-      `;
-    }).join('');
+        <div id="grid-canvas-wrap-${globalIdx}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;"></div>
+      </div>
+    `;
+  }).join('');
 
-    displayItems.forEach((item, relIdx) => {
-      const globalIdx = startIndex + relIdx;
-      const wrapEl = document.getElementById(`grid-dm-canvas-wrap-${globalIdx}`);
-      if (wrapEl) {
-        const miniCanvas = LabelApp.CodeEngine.renderLabelToCanvas(item, dims, 120, s);
-        miniCanvas.style.width = '100%';
-        miniCanvas.style.height = '100%';
-        miniCanvas.style.display = 'block';
-        wrapEl.appendChild(miniCanvas);
-      }
-    });
-  } else {
-    // 1D Barcode & QR Code standard grid layout
-    const hasTopText = (s.textPosition === 'top' || s.textPosition === 'both');
-    const hasBottomText = (s.textPosition === 'bottom' || s.textPosition === 'both');
-    const textSpaceEstimate = (hasTopText ? 30 : 0) + (hasBottomText ? 30 : 0);
-    const gridBcHeight = Math.max(30, Math.round((gridItemHeight - textSpaceEstimate) * (s.barcodeHeightRatio / 100) * 0.8));
-    const is2DCode = LabelApp.CodeEngine.is2D(s.codeType);
-    const gridCodeBoxWidth = is2DCode ? `${gridBcHeight}px` : `${s.barcodeWidthRatio}%`;
-
-    gridContainer.innerHTML = displayItems.map((item, relIdx) => {
-      const globalIdx = startIndex + relIdx;
-      const isSelected = globalIdx === safeIdx ? 'selected-item' : '';
-      return `
-        <div class="barcode-item ${borderClass} ${isSelected}" id="bc-item-${globalIdx}" onclick="LabelApp.selectLabelIndex(${globalIdx})" style="padding: ${Math.round(s.labelPadding * 0.6)}px; background-color: ${s.bgColor}; min-height: ${gridItemHeight}px;">
-          <div class="item-actions">
-            <button class="mini-icon-btn" title="Download PNG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'png')">PNG</button>
-            <button class="mini-icon-btn" title="Download SVG" onclick="event.stopPropagation(); LabelApp.downloadSingle('${item.code}', ${globalIdx}, 'svg')">SVG</button>
-          </div>
-
-          ${hasTopText ? `
-            <div class="barcode-text-top" style="font-family:'${s.fontFamily}', 'Inter', sans-serif; font-weight:${s.fontWeight}; font-size:${Math.max(11, s.fontSize - 6)}px; letter-spacing:${s.letterSpacing}px; color:${s.textColor}; ${slashedStyle}">
-              ${LabelApp.escapeHtml(item.title.toUpperCase())}
-            </div>
-          ` : ''}
-
-          <div class="barcode-svg-wrap" style="height: ${gridBcHeight}px; width: ${gridCodeBoxWidth}; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-            <div id="grid-code-target-${globalIdx}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;"></div>
-          </div>
-
-          ${hasBottomText ? `
-            <div class="barcode-text-bottom" style="font-family:'${s.fontFamily}', 'Inter', sans-serif; font-size:${Math.max(9, s.fontSize - 10)}px; letter-spacing:${s.letterSpacing}px; color:${s.textColor}; ${slashedStyle}">
-              ${LabelApp.escapeHtml(item.title.toUpperCase())}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }).join('');
-
-    displayItems.forEach((item, relIdx) => {
-      const globalIdx = startIndex + relIdx;
-      const targetEl = document.getElementById(`grid-code-target-${globalIdx}`);
-      if (targetEl) {
-        LabelApp.CodeEngine.renderIntoDOM(
-          targetEl,
-          item.code,
-          s.codeType,
-          s.barcodeFormat,
-          s.barColor,
-          s.bgColor,
-          140 * (s.barcodeWidthRatio / 100),
-          gridBcHeight
-        );
-      }
-    });
-  }
+  displayItems.forEach((item, relIdx) => {
+    const globalIdx = startIndex + relIdx;
+    const wrapEl = document.getElementById(`grid-canvas-wrap-${globalIdx}`);
+    if (wrapEl) {
+      const miniCanvas = LabelApp.CodeEngine.renderLabelToCanvas(item, dims, 120, s);
+      miniCanvas.style.width = '100%';
+      miniCanvas.style.height = '100%';
+      miniCanvas.style.display = 'block';
+      wrapEl.appendChild(miniCanvas);
+    }
+  });
 };
